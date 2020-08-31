@@ -21,10 +21,12 @@ io.on('connection', (socket) => {
 	});
 	
 	// when a client sends a card to the server
-	socket.on('sentCard', (cardContent) => {
-		console.log(cardContent);
+	socket.on('sentCard', (card) => {
+		console.log("Recieved card from a socket");
+		console.log(card);
 	});
 	
+	// When a client wants another card for their hand
 	socket.on('requestedCard', () => {
 		console.log("Someone wants a card");
 		socket.emit('requestedCard', "A Card");

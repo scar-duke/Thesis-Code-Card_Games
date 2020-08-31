@@ -21,6 +21,7 @@ canvas {
 
 			<p>Should be something <i>interesting</i> above this line...<p>
 			<button type="button" id="testButton">Get a Card</button>
+			<button type="button" id="testButton2">Send First Card</button>
 
 		</div> <!--End Container Div-->
 		
@@ -33,8 +34,12 @@ canvas {
 				console.log(content);
 				addNewCardToArray(content);
 			});
+			socket.on('sentCard', function() {
+				// do something
+			});
 			
 			document.getElementById("testButton").addEventListener("click", function(){getNewCard(socket);});
+			document.getElementById("testButton2").addEventListener("click", function(){sendCardToServer(socket, cardArray[0]);});
 
 		});
 		</script>

@@ -1,18 +1,6 @@
 var cardArray = [];
 
-function startGame() {
-	cardArea.start();
-	var i;
-	var x = 20;
-	var y = 20;
-	cardArray.push(new Card("Software"));
-	for (i = 0; i < cardArray.length; i++) {
-		cardArray[i].drawCard(x, y);
-		x += 80;
-	}
-	console.log(cardArray[0].getCardDetails());
-}
-var cardArea = {
+var canvas = {
 	canvas : document.createElement("canvas"),
 	start : function() {
 		this.canvas.width = window.innerWidth - window.innerWidth/3;
@@ -21,13 +9,21 @@ var cardArea = {
 		document.getElementById("canvasLocation").insertBefore(this.canvas, document.getElementById("canvasLocation").childNodes[0]);
 	}
 }
+function startGame() {
+	canvas.start();
+	cardArray.push(new Card("Software"));
+	cardArray.push(new Card("Engineering"));
+	cardArray.push(new Card("Lyfe"));
+	drawOnCanvas();
+	console.log(cardArray.toString());
+}
 
 class Card {
 	constructor(content) {
 	this.content = content;
 	this.colour = "white";
-	this.width = 65;
-	this.height = 100;
+	this.width = 80;
+	this.height = 110;
 	this.x = null;
 	this.y = null;
 	}
@@ -37,13 +33,13 @@ class Card {
 	}
 	
 	toString() {
-		return "Card with " + this.content + " at (" + this.x + ", " + this.y + ")";
+		return "Card with \"" + this.content + "\" at (" + this.x + ", " + this.y + ")";
 	}
 	
 	drawCard(x, y) {
 		this.x = x;
 		this.y = y;
-		var ctx = cardArea.context;
+		var ctx = canvas.context;
 		ctx.beginPath();
 		ctx.rect(this.x, this.y, this.width, this.height);
 		ctx.stroke();
@@ -56,20 +52,36 @@ class Card {
 	}
 }
 
-
-
-function onClick(card) {
-	card
+function drawOnCanvas() {
+	var ctx = canvas.context;
+	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+	var i;
+	var x = 20;
+	var y = 20;
+	for (i = 0; i < cardArray.length; i++) {
+		cardArray[i].drawCard(x, y);
+		x += 100;
+	}
 }
 
-// MAKE AN ARRAY OF CARDS, EVERY TIME A CARD DISAPPEARS REMOVE FROM THE ARRAY AND REDRAW ALL OF THEM
+
+
 // MAKE CLICKABLE EVENT ON CANVAS GONNA HAVE TO DO MATH TO SEE IF A CARD WAS CLICKED ON
 
+// Requests a new card from the server
 function getNewCard(socket) {
 	socket.emit('requestedCard');
 }
 
+// Takes content recieved from the server and adds it to the card hand array
 function addNewCardToArray(content) {
 	cardArray.push(new Card(content));
-	console.log(cardArray[1].toString());
+	drawOnCanvas();
+}
+
+// Sends chosen card to server and removes it from the array
+function sendCardToServer(socket, card) {
+	socket.emit('sentCard', card);
+	cardArray.splice(cardArray.indexOf(card), 1);
+	drawOnCanvas();
 }
