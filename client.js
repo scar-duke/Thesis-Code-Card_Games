@@ -55,12 +55,17 @@ class Card {
 function drawOnCanvas() {
 	var ctx = canvas.context;
 	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-	var i;
 	var x = 20;
 	var y = 20;
 	for (i = 0; i < cardArray.length; i++) {
 		cardArray[i].drawCard(x, y);
 		x += 100;
+		
+		//if card width added to x position would put it off the canvas, move down
+		if(x + 80 > ctx.canvas.width) {
+			x = 20;
+			y += 130;
+		}
 	}
 }
 
