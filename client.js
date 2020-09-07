@@ -70,10 +70,20 @@ function drawOnCanvas() {
 
 function getMousePos(canvas, evt) {
     var rect = canvas.getBoundingClientRect();
-    return {
-		x: evt.clientX - rect.left,
-		y: evt.clientY - rect.top
-    };
+    return [
+		evt.clientX - rect.left,
+		evt.clientY - rect.top
+    ];
+}
+
+function getClickedCard(x, y) {
+	for(var i = 0; i < cardArray.length; i++) {
+		if(x > cardArray[i].x & x < cardArray[i].x + cardArray[i].width) {
+			if(y > cardArray[i].y & y < cardArray[i].y + cardArray[i].height) {
+				return cardArray[i];
+			}
+		}
+	}
 }
 
 
