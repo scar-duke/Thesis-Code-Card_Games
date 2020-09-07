@@ -2,5 +2,8 @@ document.getElementById("testButton").addEventListener("click", function(){getNe
 
 document.getElementById("handCanvas").addEventListener("click", function(e) {
 	xyPair = getMousePos(document.getElementById("handCanvas"), e);
-	sendCardToServer(socket, getClickedCard.apply(null, xyPair));
+	c = getClickedCard.apply(null, xyPair);
+	if(c != undefined) {
+		sendCardToServer(socket, c);
+	}
 });

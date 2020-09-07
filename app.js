@@ -7,16 +7,20 @@ app.get('/', (req, res) => {
 	res.sendFile(__dirname + '/index.html');
 });
 
-app.get('/client.js', (req, res) => {
-	res.sendFile(__dirname + '/client.js');
+app.get('/js/client.js', (req, res) => {
+	res.sendFile(__dirname + '/js/client.js');
 });
 
-app.get('/socketClient.js', (req, res) => {
-	res.sendFile(__dirname + '/socketClient.js');
+app.get('/js/socketClient.js', (req, res) => {
+	res.sendFile(__dirname + '/js/socketClient.js');
 });
 
-app.get('/pageActions.js', (req, res) => {
-	res.sendFile(__dirname + '/pageActions.js');
+app.get('/js/pageActions.js', (req, res) => {
+	res.sendFile(__dirname + '/js/pageActions.js');
+});
+
+app.get('/css/style.css', (req, res) => {
+	res.sendFile(__dirname + '/css/style.css');
 });
 
 
