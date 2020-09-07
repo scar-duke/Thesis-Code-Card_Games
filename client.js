@@ -1,21 +1,20 @@
 var cardArray = [];
 
-var canvas = {
-	canvas : document.createElement("canvas"),
-	start : function() {
-		this.canvas.width = window.innerWidth - window.innerWidth/3;
-		this.canvas.height = 400;
-		this.context = this.canvas.getContext("2d");
-		document.getElementById("canvasLocation").insertBefore(this.canvas, document.getElementById("canvasLocation").childNodes[0]);
-	}
-}
-function startGame() {
+window.onload = function () {
 	canvas.start();
 	cardArray.push(new Card("Software"));
 	cardArray.push(new Card("Engineering"));
 	cardArray.push(new Card("Lyfe"));
 	drawOnCanvas();
 	console.log(cardArray.toString());
+};
+var canvas = {
+	canvas : document.getElementById("handCanvas"),
+	start : function() {
+		this.canvas.width = window.innerWidth - window.innerWidth/3;
+		this.canvas.height = 400;
+		this.context = this.canvas.getContext("2d");
+	}
 }
 
 class Card {
@@ -69,6 +68,13 @@ function drawOnCanvas() {
 	}
 }
 
+function getMousePos(canvas, evt) {
+    var rect = canvas.getBoundingClientRect();
+    return {
+		x: evt.clientX - rect.left,
+		y: evt.clientY - rect.top
+    };
+}
 
 
 // MAKE CLICKABLE EVENT ON CANVAS GONNA HAVE TO DO MATH TO SEE IF A CARD WAS CLICKED ON

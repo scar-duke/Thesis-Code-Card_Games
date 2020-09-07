@@ -4,7 +4,6 @@
 		<meta charset='utf-8'/>
 		<title>Test Client</title>
 		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
-		<script type="text/javascript" src="client.js"></script>
 		<!--GET RID OF THIS LATER OR PUT IN .CSS, JUST FOR TESTING-->
 <style>
 canvas {
@@ -14,9 +13,9 @@ canvas {
 </style>
 	</head>
 
-	<body onload="startGame()">
+	<body>
 		<div class="container" id="canvasLocation">
-			
+			<canvas id="handCanvas"></canvas>
 			<!--Canvas will show up above in this area of code-->
 
 			<p>Should be something <i>interesting</i> above this line...<p>
@@ -27,22 +26,8 @@ canvas {
 		
 		<script src="/socket.io/socket.io.js"></script>
 		<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-		<script>
-		$(function () {
-			var socket = io();
-			socket.on('requestedCard', function(content) {
-				console.log(content);
-				addNewCardToArray(content);
-			});
-			socket.on('sentCard', function() {
-				// do something
-			});
-			
-			document.getElementById("testButton").addEventListener("click", function(){getNewCard(socket);});
-			document.getElementById("testButton2").addEventListener("click", function(){sendCardToServer(socket, cardArray[0]);});
-
-		});
-		</script>
-		
+		<script type="text/javascript" src="client.js"></script>
+		<script type="text/javascript" src="pageActions.js"></script>
+		<script type="text/javascript" src="socketClient.js"></script>
 	</body>
 </html>

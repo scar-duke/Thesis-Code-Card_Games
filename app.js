@@ -11,6 +11,14 @@ app.get('/client.js', (req, res) => {
 	res.sendFile(__dirname + '/client.js');
 });
 
+app.get('/socketClient.js', (req, res) => {
+	res.sendFile(__dirname + '/socketClient.js');
+});
+
+app.get('/pageActions.js', (req, res) => {
+	res.sendFile(__dirname + '/pageActions.js');
+});
+
 
 // Handle the server-side connections
 io.on('connection', (socket) => {
@@ -29,7 +37,7 @@ io.on('connection', (socket) => {
 	// When a client wants another card for their hand
 	socket.on('requestedCard', () => {
 		console.log("Someone wants a card");
-		socket.emit('requestedCard', "A Card");
+		socket.emit('requestedCard', Math.floor(Math.random()*100000));
 		console.log("Gave them a Card");
 	});
 });
