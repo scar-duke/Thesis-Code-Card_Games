@@ -32,7 +32,7 @@ io.on('connection', (socket) => {
 		console.log('user disconnected');
 	});
 	
-	// when a client sends a card to the server
+	// when a client sends a card to the server, put it on the table NEED TO IMPLEMENT ON TABLE NEXT
 	socket.on('sentCard', (card) => {
 		console.log("Recieved card from a socket");
 		console.log(card);
