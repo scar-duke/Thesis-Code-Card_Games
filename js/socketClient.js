@@ -6,6 +6,9 @@ socket.on('requestedCard', function(content) {
 socket.on('sentCard', function() {
 	// do something? Do I even need this?
 });
+socket.on('updateTableUsers', function(numUser) {
+	updateTableUsers(numUser);
+});
 
 
 // Requests a new card from the server

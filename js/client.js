@@ -12,7 +12,7 @@ var handCanvas = {
 	canvas : document.getElementById("handCanvas"),
 	start : function() {
 		this.canvas.width = window.innerWidth - window.innerWidth/3;
-		this.canvas.height = 270;
+		this.canvas.height = 150;
 		this.context = this.canvas.getContext("2d");
 	}
 }
@@ -20,7 +20,7 @@ var tableCanvas = {
 	canvas : document.getElementById("tableCanvas"),
 	start : function() {
 		this.canvas.width = window.innerWidth - window.innerWidth/3;
-		this.canvas.height = 350;
+		this.canvas.height = 400;
 		this.context = this.canvas.getContext("2d");
 	}
 }
@@ -28,7 +28,7 @@ var tableCanvas = {
 class Card {
 	constructor(content) {
 	this.content = content;
-	this.colour = "white";
+	this.colour = cardColour;
 	this.width = 80;
 	this.height = 110;
 	this.x = null;
@@ -52,8 +52,8 @@ class Card {
 		ctx.stroke();
 		ctx.fillStyle = this.colour;
 		ctx.fillRect(this.x, this.y, this.width, this.height);
-		ctx.fillStyle = "black";
-		ctx.font = "15px Arial";
+		ctx.fillStyle = fontColour;
+		ctx.font = "15px " + fontType;
 		ctx.textAlign = "center";
 		ctx.fillText(this.content, this.x + this.width/2, this.y + this.height/2);
 	}
@@ -94,6 +94,22 @@ function getClickedCard(x, y) {
 	}
 }
 
-// table for all players when sent to server
-// num of players
+function updateTableUsers(numUsers) {
+	console.log(numUsers);
+	var ctx = tableCanvas.context;
+	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+	x = 20;
+	y = 40;
+	for(var i = 1; i < numUsers+1; i++) {
+		ctx.fillStyle = fontColour;
+		ctx.font = "25px " + fontType;
+		ctx.textAlign = "left";
+		ctx.fillText("Player " + i +": ", x, y);
+		y += 40;
+	}
+}
+
+
 // only one person click on table for judging
+// wait for x clients to join before starting
+// turns
