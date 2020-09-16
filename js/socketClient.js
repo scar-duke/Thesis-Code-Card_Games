@@ -2,14 +2,25 @@ var socket = io();
 
 socket.on('requestedCard', function(content) {
 	addNewCardToArray(content);
+	socket.emit('passTurn');
+	document.getElementById("turn").style.display = "none";
+	isTurn = false;
 });
-socket.on('sentCard', function() {
-	// do something? Do I even need this?
+socket.on('sentCardSuccess', function() {
+	socket.emit('passTurn');
+	document.getElementById("turn").style.display = "none";
+	isTurn = false;
 });
 socket.on('updateTableUsers', function(numUser) {
 	updateTableUsers(numUser);
 });
-
+socket.on('yourTurn', function() {
+	console.log("Your Turn");
+	isTurn = true;
+	document.getElementById("turn").style.display = "inline";
+	
+});
+// add a trigger for turn end to hide stuff
 
 // Requests a new card from the server
 function getNewCard(socket) {

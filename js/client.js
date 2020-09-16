@@ -1,4 +1,5 @@
 var cardArray = [];
+var isTurn = true;
 
 window.onload = function () {
 	handCanvas.start();
@@ -95,7 +96,6 @@ function getClickedCard(x, y) {
 }
 
 function updateTableUsers(numUsers) {
-	console.log(numUsers);
 	var ctx = tableCanvas.context;
 	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 	x = 20;
@@ -112,4 +112,3 @@ function updateTableUsers(numUsers) {
 
 // only one person click on table for judging
 // wait for x clients to join before starting
-// turns
