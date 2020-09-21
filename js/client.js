@@ -110,5 +110,6 @@ function updateTableUsers(numUsers) {
 }
 
 
-// only one person click on table for judging
-// wait for x clients to join before starting
+// make the starting screen, make a 'I'm ready' button for everyone
+// add screen for clients that try to join late
+// randomly pick player to go first

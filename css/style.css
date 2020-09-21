@@ -1,9 +1,22 @@
-canvas {
+#waitText {
+	display: none;
+}
+
+#handCanvas {
 	border: 1px solid #d3d3d3;
 	background-color: #f1f1f1;
+	display: none;
 }
 
 #tableCanvas {
 	border: 1px solid #d3d3d3;
 	background-color: #C4D9FE;
+	display: block;
+}
+
+button {
+	display: none;
+}
+#readyButton {
+	display: inline;
 }

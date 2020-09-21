@@ -2,11 +2,18 @@ var app = require('express')();
 var http = require('http').createServer(app);
 var io = require('socket.io')(http);
 
+// =================================================Declare global variables for server use
 var users = [];
+var maxPlayers = 5;
+var minPlayers = 3;
+
 var currentTurn = 1;
 var turn = 0;
 
-// Get index file and other required external javascript/css function files
+//var roomNum = 1; //rooms don't exist yet
+var playersReady = 0;
+
+// =================Get index file and other required external javascript/css function files
 app.get('/', (req, res) => {
 	res.sendFile(__dirname + '/index.html');
 });
@@ -27,17 +34,23 @@ app.get('/css/style.css', (req, res) => {
 });
 
 
-// Handle the server-side connections
+// ========================================================Handle the server-side connections
 io.on('connection', (socket) => {
 	users.push(socket);
 	console.log('a user connected');
-	io.sockets.emit('updateTableUsers', users.length);
+	io.sockets.emit('updateTableUsers', users.length); //change this when implement rooms
 	// when a client disconnects from the server
 	socket.on('disconnect', () => {
-		//users.splice(users.indexOf(socket.id), 1);
 		users.splice(users.indexOf(socket), 1);
 		io.sockets.emit('updateTableUsers', users.length);
 		console.log('user disconnected');
+	});
+	socket.on('playerReady', () => {
+		playersReady++;
+		if(playersReady >= minPlayers & playersReady <= maxPlayers) {
+			io.sockets.emit('allPlayersReady');
+			users[0].emit('yourTurn');
+		}
 	});
 	
 	// when a client sends a card to the server, put it on the table NEED TO IMPLEMENT ON TABLE NEXT
@@ -67,6 +80,7 @@ http.listen(3000, () => {
 });
 
 
+// ================================================================Extra methods
 function passTurn(socket) {
 	turn = currentTurn++ % users.length;
 	console.log("next turn triggered");

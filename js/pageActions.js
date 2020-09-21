@@ -1,3 +1,9 @@
+document.getElementById("readyButton").addEventListener("click", function() {
+	document.getElementById("waitText").style.display = "inline";
+	document.getElementById("readyButton").style.display = "none";
+	socket.emit('playerReady');
+});
+
 document.getElementById("getCard").addEventListener("click", function(){
 	if(isTurn) {
 		getNewCard(socket);

@@ -1,10 +1,15 @@
 var socket = io();
 
+socket.on('allPlayersReady', function() {
+	document.getElementById("waitText").style.display = "none";
+	document.getElementById("handCanvas").style.display = "block";
+});
+
 socket.on('requestedCard', function(content) {
 	addNewCardToArray(content);
-	socket.emit('passTurn');
-	document.getElementById("turn").style.display = "none";
-	isTurn = false;
+	//socket.emit('passTurn');
+	//document.getElementById("turn").style.display = "none";
+	//isTurn = false;
 });
 socket.on('sentCardSuccess', function() {
 	socket.emit('passTurn');
@@ -18,7 +23,7 @@ socket.on('yourTurn', function() {
 	console.log("Your Turn");
 	isTurn = true;
 	document.getElementById("turn").style.display = "inline";
-	
+	socket.emit('requestedCard');
 });
 // add a trigger for turn end to hide stuff
 
