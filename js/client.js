@@ -1,5 +1,6 @@
 var cardArray = [];
 var isTurn = true;
+var canChooseCard = false;
 
 window.onload = function () {
 	handCanvas.start();
@@ -7,7 +8,7 @@ window.onload = function () {
 	cardArray.push(new Card("Software"));
 	cardArray.push(new Card("Engineering"));
 	cardArray.push(new Card("Lyfe"));
-	drawOnCanvas(handCanvas);
+	drawOnCanvas(cardArray, handCanvas);
 };
 var handCanvas = {
 	canvas : document.getElementById("handCanvas"),
@@ -33,7 +34,8 @@ class Card {
 	this.width = 80;
 	this.height = 110;
 	this.x = null;
-	this.y = null;
+	this.y = null
+	this.owner = null;
 	}
 	
 	getCardDetails() {
@@ -60,7 +62,7 @@ class Card {
 	}
 }
 
-function drawOnCanvas(canvas) {
+function drawOnCanvas(cardArray, canvas) {
 	var ctx = canvas.context;
 	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 	var x = 20;
@@ -95,6 +97,16 @@ function getClickedCard(x, y) {
 	}
 }
 
+function getWinningCard(x, y) {
+	for(var i = 0; i < cardsOnTable.length; i++) {
+		if(x > cardsOnTable[i].x & x < cardsOnTable[i].x + cardsOnTable[i].width) {
+			if(y > cardsOnTable[i].y & y < cardsOnTable[i].y + cardsOnTable[i].height) {
+				return cardsOnTable[i];
+			}
+		}
+	}
+}
+
 function updateTableUsers(numUsers) {
 	var ctx = tableCanvas.context;
 	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -108,6 +120,10 @@ function updateTableUsers(numUsers) {
 		y += 40;
 	}
 }
+
+// get all cards shown on table with black card when sent
+// player 1 picks card and server keeps track of score
+// player 2 starts
 
 
 // make the starting screen, make a 'I'm ready' button for everyone

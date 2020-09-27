@@ -1,8 +1,20 @@
 var socket = io();
+var cardsOnTable = [];
+
+socket.on('maxPlayersReached', function() {
+	document.getElementById("sorryText").style.display = "block";
+	document.getElementById("readyButton").style.display = "none";
+});
 
 socket.on('allPlayersReady', function() {
 	document.getElementById("waitText").style.display = "none";
 	document.getElementById("handCanvas").style.display = "block";
+	canChooseCard = true;
+});
+
+socket.on('clearTable', function(usersSize) {
+	cardsOnTable = [];
+	updateTableUsers(usersSize);
 });
 
 socket.on('requestedCard', function(content) {
@@ -12,9 +24,10 @@ socket.on('requestedCard', function(content) {
 	//isTurn = false;
 });
 socket.on('sentCardSuccess', function() {
-	socket.emit('passTurn');
-	document.getElementById("turn").style.display = "none";
-	isTurn = false;
+	socket.emit('requestedCard');
+	//socket.emit('passTurn');
+	//document.getElementById("turn").style.display = "none";
+	//isTurn = false;
 });
 socket.on('updateTableUsers', function(numUser) {
 	updateTableUsers(numUser);
@@ -22,10 +35,21 @@ socket.on('updateTableUsers', function(numUser) {
 socket.on('yourTurn', function() {
 	console.log("Your Turn");
 	isTurn = true;
-	document.getElementById("turn").style.display = "inline";
-	socket.emit('requestedCard');
+	canChooseCard = false;
+	document.getElementById("handCanvas").style.display = "none";
 });
-// add a trigger for turn end to hide stuff
+
+//CAH socket functions
+socket.on('addCardToTable', function(content, id, usersSize) {
+	card = new Card(content);
+	card.owner = id;
+	cardsOnTable.push(card);
+	if(cardsOnTable.length == usersSize - 1) {
+		drawOnCanvas(cardsOnTable, tableCanvas);
+		socket.emit('chooseWinningCard');
+	}
+});
+
 
 // Requests a new card from the server
 function getNewCard(socket) {
@@ -35,12 +59,12 @@ function getNewCard(socket) {
 // Takes content recieved from the server and adds it to the card hand array
 function addNewCardToArray(content) {
 	cardArray.push(new Card(content));
-	drawOnCanvas(handCanvas);
+	drawOnCanvas(cardArray, handCanvas);
 }
 
 // Sends chosen card to server and removes it from the array
 function sendCardToServer(socket, card) {
 	socket.emit('sentCard', card);
 	cardArray.splice(cardArray.indexOf(card), 1);
-	drawOnCanvas(handCanvas);
+	drawOnCanvas(cardArray, handCanvas);
 }

@@ -4,8 +4,8 @@ var io = require('socket.io')(http);
 
 // =================================================Declare global variables for server use
 var users = [];
-var maxPlayers = 5;
-var minPlayers = 3;
+var maxPlayers = 3;
+var minPlayers = 2;
 
 var currentTurn = 1;
 var turn = 0;
@@ -36,43 +36,57 @@ app.get('/css/style.css', (req, res) => {
 
 // ========================================================Handle the server-side connections
 io.on('connection', (socket) => {
-	users.push(socket);
-	console.log('a user connected');
-	io.sockets.emit('updateTableUsers', users.length); //change this when implement rooms
-	// when a client disconnects from the server
-	socket.on('disconnect', () => {
-		users.splice(users.indexOf(socket), 1);
-		io.sockets.emit('updateTableUsers', users.length);
-		console.log('user disconnected');
-	});
-	socket.on('playerReady', () => {
-		playersReady++;
-		if(playersReady >= minPlayers & playersReady <= maxPlayers) {
-			io.sockets.emit('allPlayersReady');
-			users[0].emit('yourTurn');
-		}
-	});
+	if(users.length < maxPlayers) {
+		users.push(socket);
+		console.log('a user connected');
+		io.sockets.emit('updateTableUsers', users.length); //change this when implement rooms
+	} else {
+		socket.emit('maxPlayersReached');
+		socket.disconnect(true);
+	}
+		// when a client disconnects from the server
+		socket.on('disconnect', () => {
+			users.splice(users.indexOf(socket), 1);
+			io.sockets.emit('updateTableUsers', users.length);
+			console.log('user disconnected');
+		});
+		socket.on('playerReady', () => {
+			playersReady++;
+			if(users.length >= minPlayers & playersReady == users.length) {
+				io.sockets.emit('allPlayersReady');
+				users[0].emit('yourTurn');
+			}
+		});
 	
-	// when a client sends a card to the server, put it on the table NEED TO IMPLEMENT ON TABLE NEXT
-	socket.on('sentCard', (card) => {
-		console.log("Recieved card from " + socket.id);
-		console.log(card);
-		socket.emit('sentCardSuccess');
-	});
+		// when a client sends a card to the server, put it on the table NEED TO IMPLEMENT ON TABLE NEXT
+		socket.on('sentCard', (card) => {
+			console.log("Recieved card from " + socket.id);
+			console.log(card);
+			io.sockets.emit('addCardToTable', card.content, socket.id, users.length);
+			
+			//give player another card after they sent one in
+			socket.emit('sentCardSuccess');
+		});
 	
-	// When a client wants another card for their hand, send them the CONTENT
-	socket.on('requestedCard', () => {
-		console.log(socket.id + " wants a card");
-		socket.emit('requestedCard', Math.floor(Math.random()*100000)); // put csv file load-in here
-		console.log("Gave them a Card");
-	});
+		// When a client wants another card for their hand, send them the CONTENT
+		socket.on('requestedCard', () => {
+			console.log(socket.id + " wants a card");
+			socket.emit('requestedCard', Math.floor(Math.random()*100000)); // put csv file load-in here
+			console.log("Gave them a Card");
+		});
+		
+		socket.on('winChoice', (card) => {
+			console.log(card.content + " by " + card.owner + " won that round");
+			io.sockets.emit('clearTable', users.length);
+		});
 	
-	socket.on('passTurn', () => {
-		if(users[turn] == socket) {
-			users[(turn+1)%users.length].emit('yourTurn');
-			passTurn(socket);
-		}
-	});
+		socket.on('passTurn', () => {
+			if(users[turn] == socket) {
+				users[(turn+1)%users.length].emit('yourTurn');
+				passTurn(socket);
+			}
+		});
+	
 });
 
 http.listen(3000, () => {
