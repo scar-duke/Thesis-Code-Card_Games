@@ -1,5 +1,5 @@
 var cardArray = [];
-var isTurn = true;
+var isTurn = false;
 var canChooseCard = false;
 
 window.onload = function () {

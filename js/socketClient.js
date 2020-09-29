@@ -15,6 +15,7 @@ socket.on('allPlayersReady', function() {
 socket.on('clearTable', function(usersSize) {
 	cardsOnTable = [];
 	updateTableUsers(usersSize);
+	canChooseCard = true;
 });
 
 socket.on('requestedCard', function(content) {

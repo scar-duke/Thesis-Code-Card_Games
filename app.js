@@ -78,9 +78,9 @@ io.on('connection', (socket) => {
 		
 		socket.on('winChoice', (card) => {
 			console.log(card.content + " by " + card.owner + " won that round");
-			
+			// add to score here
 			io.sockets.emit('clearTable', users.length);
-			// update score
+			// update score to clients here
 		});
 	
 		socket.on('passTurn', () => {
