@@ -1,4 +1,6 @@
 //Add Later, but keep in mind
-var cardColour = "white";
+var handCardColour = "white";
+var questionCardColour = "black";
 var fontColour = "black";
+var questionFontColour = "white";
 var fontType = "Arial";

@@ -30,7 +30,7 @@ var tableCanvas = {
 class Card {
 	constructor(content) {
 	this.content = content;
-	this.colour = cardColour;
+	this.colour = handCardColour;
 	this.width = 80;
 	this.height = 110;
 	this.x = null;
@@ -55,7 +55,11 @@ class Card {
 		ctx.stroke();
 		ctx.fillStyle = this.colour;
 		ctx.fillRect(this.x, this.y, this.width, this.height);
-		ctx.fillStyle = fontColour;
+		if(this.colour == handCardColour) {
+			ctx.fillStyle = fontColour;
+		} else {
+			ctx.fillStyle = questionFontColour;
+		}
 		ctx.font = "15px " + fontType;
 		ctx.textAlign = "center";
 		ctx.fillText(this.content, this.x + this.width/2, this.y + this.height/2);
@@ -121,11 +125,25 @@ function updateTableUsers(numUsers) {
 	}
 }
 
-// get all cards shown on table with black card when sent
-// player 1 picks card and server keeps track of score
-// player 2 starts
+function updateTableWithCard(numUsers, content) {
+	var ctx = tableCanvas.context;
+	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+	x = 20;
+	y = 40;
+	for(var i = 1; i < numUsers+1; i++) {
+		ctx.fillStyle = fontColour;
+		ctx.font = "25px " + fontType;
+		ctx.textAlign = "left";
+		ctx.fillText("Player " + i +": ", x, y);
+		y += 40;
+	}
+	var c = new Card(content);
+	c.colour = questionCardColour;
+	c.drawCard(x, y, tableCanvas);
+}
 
+// make canvas dynamic
+// make table look better (and make card and players wrapp around like the hand)
+// add a score
 
-// make the starting screen, make a 'I'm ready' button for everyone
-// add screen for clients that try to join late
 // randomly pick player to go first

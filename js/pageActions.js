@@ -30,8 +30,8 @@ document.getElementById("tableCanvas").addEventListener("click", function(e) {
 		}
 	});
 
-document.getElementById("turn").addEventListener("click", function() {
-	socket.emit('passTurn');
-	document.getElementById("turn").style.display = "none";
-	isTurn = false;
-});
+//document.getElementById("turn").addEventListener("click", function() {
+//	socket.emit('passTurn');
+//	document.getElementById("turn").style.display = "none";
+//	isTurn = false;
+//});

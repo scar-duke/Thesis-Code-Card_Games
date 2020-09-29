@@ -54,11 +54,12 @@ io.on('connection', (socket) => {
 			playersReady++;
 			if(users.length >= minPlayers & playersReady == users.length) {
 				io.sockets.emit('allPlayersReady');
+				io.sockets.emit('displayQuestionCard', users.length, "Question"); // put csv file load-in here
 				users[0].emit('yourTurn');
 			}
 		});
 	
-		// when a client sends a card to the server, put it on the table NEED TO IMPLEMENT ON TABLE NEXT
+		// when a client sends a card to the server, put it on the table
 		socket.on('sentCard', (card) => {
 			console.log("Recieved card from " + socket.id);
 			console.log(card);
@@ -77,13 +78,16 @@ io.on('connection', (socket) => {
 		
 		socket.on('winChoice', (card) => {
 			console.log(card.content + " by " + card.owner + " won that round");
+			
 			io.sockets.emit('clearTable', users.length);
+			// update score
 		});
 	
 		socket.on('passTurn', () => {
 			if(users[turn] == socket) {
 				users[(turn+1)%users.length].emit('yourTurn');
 				passTurn(socket);
+				io.sockets.emit('displayQuestionCard', users.length, "Question"); // put csv file load-in here
 			}
 		});
 	

@@ -40,6 +40,10 @@ socket.on('yourTurn', function() {
 });
 
 //CAH socket functions
+socket.on('displayQuestionCard', function(usersSize, content) {
+	updateTableWithCard(usersSize, content);
+});
+
 socket.on('addCardToTable', function(content, id, usersSize) {
 	card = new Card(content);
 	card.owner = id;
