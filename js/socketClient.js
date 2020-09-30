@@ -12,9 +12,9 @@ socket.on('allPlayersReady', function() {
 	canChooseCard = true;
 });
 
-socket.on('clearTable', function(usersSize) {
+socket.on('clearTable', function(idsAndScore) {
 	cardsOnTable = [];
-	updateTableUsers(usersSize);
+	updateTableUsers(idsAndScore);
 	canChooseCard = true;
 });
 
@@ -30,8 +30,8 @@ socket.on('sentCardSuccess', function() {
 	//document.getElementById("turn").style.display = "none";
 	//isTurn = false;
 });
-socket.on('updateTableUsers', function(numUser) {
-	updateTableUsers(numUser);
+socket.on('updateTableUsers', function(idsAndScore) {
+	updateTableUsers(idsAndScore);
 });
 socket.on('yourTurn', function() {
 	console.log("Your Turn");
@@ -41,8 +41,8 @@ socket.on('yourTurn', function() {
 });
 
 //CAH socket functions
-socket.on('displayQuestionCard', function(usersSize, content) {
-	updateTableWithCard(usersSize, content);
+socket.on('displayQuestionCard', function(idsAndScore, content) {
+	updateTableWithCard(idsAndScore, content);
 });
 
 socket.on('addCardToTable', function(content, id, usersSize) {

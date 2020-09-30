@@ -5,9 +5,9 @@ var canChooseCard = false;
 window.onload = function () {
 	handCanvas.start();
 	tableCanvas.start();
-	cardArray.push(new Card("Software"));
-	cardArray.push(new Card("Engineering"));
-	cardArray.push(new Card("Lyfe"));
+	for(i = 0; i < numOfCardsInHand; i++) {
+		socket.emit('requestedCard');
+	}
 	drawOnCanvas(cardArray, handCanvas);
 };
 var handCanvas = {
@@ -111,30 +111,32 @@ function getWinningCard(x, y) {
 	}
 }
 
-function updateTableUsers(numUsers) {
+function updateTableUsers(userIds) {
 	var ctx = tableCanvas.context;
 	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 	x = 20;
 	y = 40;
-	for(var i = 1; i < numUsers+1; i++) {
+	for(var i = 1; i < userIds.length+1; i++) {
 		ctx.fillStyle = fontColour;
-		ctx.font = "25px " + fontType;
+		ctx.font = tableFontSize + " " + fontType;
 		ctx.textAlign = "left";
 		ctx.fillText("Player " + i +": ", x, y);
 		y += 40;
 	}
 }
 
-function updateTableWithCard(numUsers, content) {
+function updateTableWithCard(userIds, content) {
 	var ctx = tableCanvas.context;
 	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 	x = 20;
 	y = 40;
-	for(var i = 1; i < numUsers+1; i++) {
+	for(var i = 0; i < userIds.length; i++) {
+		console.log(userIds[i]);
 		ctx.fillStyle = fontColour;
-		ctx.font = "25px " + fontType;
+		ctx.font = tableFontSize + " " + fontType;
 		ctx.textAlign = "left";
-		ctx.fillText("Player " + i +": ", x, y);
+		num = i + 1;
+		ctx.fillText("Player " + num +": " + userIds[i][1], x, y);
 		y += 40;
 	}
 	var c = new Card(content);
@@ -142,8 +144,11 @@ function updateTableWithCard(numUsers, content) {
 	c.drawCard(x, y, tableCanvas);
 }
 
+// make words fit on cards (other type of container that wraps? Look into it)
 // make canvas dynamic
-// make table look better (and make card and players wrapp around like the hand)
+// make table look better (and make card and players wrap around like the hand)
 // add a score
+// Title bar, general look
+// Other quality of life features (augmenting ready players to work w/o restarting, better html, etc.)
 
 // randomly pick player to go first

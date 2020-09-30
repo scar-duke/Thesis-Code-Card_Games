@@ -2,10 +2,13 @@ var app = require('express')();
 var http = require('http').createServer(app);
 var io = require('socket.io')(http);
 
-// =================================================Declare global variables for server use
+// =================================================Set constant variables for server use
+const maxPlayers = 3;
+const minPlayers = 2;
+
+// =====================================Declare (dynamic) global variables for server use
 var users = [];
-var maxPlayers = 3;
-var minPlayers = 2;
+var idsAndScore = [];
 
 var currentTurn = 1;
 var turn = 0;
@@ -38,8 +41,9 @@ app.get('/css/style.css', (req, res) => {
 io.on('connection', (socket) => {
 	if(users.length < maxPlayers) {
 		users.push(socket);
+		idsAndScore.push([socket.id, 0]);
 		console.log('a user connected');
-		io.sockets.emit('updateTableUsers', users.length); //change this when implement rooms
+		io.sockets.emit('updateTableUsers', idsAndScore); //change this when implement rooms
 	} else {
 		socket.emit('maxPlayersReached');
 		socket.disconnect(true);
@@ -47,14 +51,19 @@ io.on('connection', (socket) => {
 		// when a client disconnects from the server
 		socket.on('disconnect', () => {
 			users.splice(users.indexOf(socket), 1);
-			io.sockets.emit('updateTableUsers', users.length);
+			for(var i = 0; i < idsAndScore.length; i++) {
+				if(idsAndScore[i][0] == socket.id) {
+					idsAndScore.splice(idsAndScore[i], 1);
+				}
+			}
+			io.sockets.emit('updateTableUsers', idsAndScore);
 			console.log('user disconnected');
 		});
 		socket.on('playerReady', () => {
 			playersReady++;
 			if(users.length >= minPlayers & playersReady == users.length) {
 				io.sockets.emit('allPlayersReady');
-				io.sockets.emit('displayQuestionCard', users.length, "Question"); // put csv file load-in here
+				io.sockets.emit('displayQuestionCard', idsAndScore, "Question"); // put csv file load-in here
 				users[0].emit('yourTurn');
 			}
 		});
@@ -76,18 +85,24 @@ io.on('connection', (socket) => {
 			console.log("Gave them a Card");
 		});
 		
+		// When the choosing player sends their winning choice
 		socket.on('winChoice', (card) => {
 			console.log(card.content + " by " + card.owner + " won that round");
-			// add to score here
-			io.sockets.emit('clearTable', users.length);
-			// update score to clients here
+			for(var i = 0; i < idsAndScore.length; i++) {
+				if(idsAndScore[i][0] == card.owner) {
+					idsAndScore[i][1] += 1;
+				}
+			}
+			//idsAndScore[idsAndScore.indexOf(card.owner)][1] += 1;
+			io.sockets.emit('clearTable', idsAndScore);
 		});
 	
+		// Begin the next turn by passing it to the next player in the array
 		socket.on('passTurn', () => {
 			if(users[turn] == socket) {
 				users[(turn+1)%users.length].emit('yourTurn');
 				passTurn(socket);
-				io.sockets.emit('displayQuestionCard', users.length, "Question"); // put csv file load-in here
+				io.sockets.emit('displayQuestionCard', idsAndScore, "Question"); // put csv file load-in here
 			}
 		});
 	
