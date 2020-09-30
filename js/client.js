@@ -60,9 +60,35 @@ class Card {
 		} else {
 			ctx.fillStyle = questionFontColour;
 		}
-		ctx.font = "15px " + fontType;
+		ctx.font = cardFontSize + " " + fontType;
 		ctx.textAlign = "center";
-		ctx.fillText(this.content, this.x + this.width/2, this.y + this.height/2);
+		this.checkTextOnCard(ctx, this.content);
+		//ctx.fillText(this.content, this.x + this.width/2, this.y + this.height/2);
+	}
+	
+	checkTextOnCard(ctx, txt) {
+		var ret = "";
+		var lineHeight = 4;
+		if(ctx.measureText(txt).width > this.width) {
+			var res = txt.split(" ");
+			for(var i = 0; i < res.length; i++) {
+				if(ctx.measureText(ret + " " + res[i]).width < this.width) {
+					ret += res[i] + " ";
+				} else {
+					ret = ret.substring(0, ret.length-1); // get rid of the space at the end
+					ctx.fillText(ret, this.x + this.width/2, this.y + this.height/lineHeight);
+					lineHeight -= 1.5;
+					i--;
+					ret = "";
+				}
+			}
+		} else { // content is fine, doesn't need put on multiple lines
+			ret = txt;
+			ctx.fillText(ret, this.x + this.width/2, this.y + this.height/lineHeight);
+			ret = "";
+		}
+		
+		ctx.fillText(ret, this.x + this.width/2, this.y + this.height/lineHeight);
 	}
 }
 
@@ -131,7 +157,6 @@ function updateTableWithCard(userIds, content) {
 	x = 20;
 	y = 40;
 	for(var i = 0; i < userIds.length; i++) {
-		console.log(userIds[i]);
 		ctx.fillStyle = fontColour;
 		ctx.font = tableFontSize + " " + fontType;
 		ctx.textAlign = "left";
