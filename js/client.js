@@ -1,6 +1,7 @@
 var cardArray = [];
 var isTurn = false;
 var canChooseCard = false;
+var currentQuestion;
 
 window.onload = function () {
 	handCanvas.start();
@@ -31,8 +32,8 @@ class Card {
 	constructor(content) {
 	this.content = content;
 	this.colour = handCardColour;
-	this.width = 80;
-	this.height = 110;
+	this.width = cardWidth;
+	this.height = cardHeight;
 	this.x = null;
 	this.y = null
 	this.owner = null;
@@ -60,35 +61,34 @@ class Card {
 		} else {
 			ctx.fillStyle = questionFontColour;
 		}
-		ctx.font = cardFontSize + " " + fontType;
+		ctx.font = cardFontSize + "px " + fontType;
 		ctx.textAlign = "center";
 		this.checkTextOnCard(ctx, this.content);
-		//ctx.fillText(this.content, this.x + this.width/2, this.y + this.height/2);
 	}
 	
 	checkTextOnCard(ctx, txt) {
 		var ret = "";
-		var lineHeight = 4;
+		var lineHeight = this.height - (cardFontSize + cardFontSize*.5);
 		if(ctx.measureText(txt).width > this.width) {
 			var res = txt.split(" ");
 			for(var i = 0; i < res.length; i++) {
 				if(ctx.measureText(ret + " " + res[i]).width < this.width) {
 					ret += res[i] + " ";
 				} else {
-					ret = ret.substring(0, ret.length-1); // get rid of the space at the end
-					ctx.fillText(ret, this.x + this.width/2, this.y + this.height/lineHeight);
-					lineHeight -= 1.5;
+					ret = ret.substring(0, ret.length-1); // gets rid of the space at the end
+					ctx.fillText(ret, this.x + this.width/2, this.y + this.height-lineHeight);
+					lineHeight -= cardFontSize;
 					i--;
 					ret = "";
 				}
 			}
 		} else { // content is fine, doesn't need put on multiple lines
 			ret = txt;
-			ctx.fillText(ret, this.x + this.width/2, this.y + this.height/lineHeight);
+			ctx.fillText(ret, this.x + this.width/2, this.y + this.height-lineHeight);
 			ret = "";
 		}
 		
-		ctx.fillText(ret, this.x + this.width/2, this.y + this.height/lineHeight);
+		ctx.fillText(ret, this.x + this.width/2, this.y + this.height-lineHeight);
 	}
 }
 
@@ -97,14 +97,16 @@ function drawOnCanvas(cardArray, canvas) {
 	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 	var x = 20;
 	var y = 20;
+	var changeX = cardWidth;
+	var changeY = cardHeight;
 	for (i = 0; i < cardArray.length; i++) {
 		cardArray[i].drawCard(x, y, canvas);
-		x += 100;
+		x += changeX + spaceBetweenCards;
 		
 		//if card width added to x position would put it off the canvas, move down
-		if(x + 80 > ctx.canvas.width) {
+		if(x + changeX > ctx.canvas.width) {
 			x = 20;
-			y += 130;
+			y += changeY + spaceBetweenCards;
 		}
 	}
 }
@@ -144,7 +146,7 @@ function updateTableUsers(userIds) {
 	y = 40;
 	for(var i = 1; i < userIds.length+1; i++) {
 		ctx.fillStyle = fontColour;
-		ctx.font = tableFontSize + " " + fontType;
+		ctx.font = tableFontSize + "px " + fontType;
 		ctx.textAlign = "left";
 		ctx.fillText("Player " + i +": ", x, y);
 		y += 40;
@@ -156,23 +158,45 @@ function updateTableWithCard(userIds, content) {
 	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 	x = 20;
 	y = 40;
+	// put in dummy string variable to determine where to place card out of way of player details
+	var playerTextWidth = ctx.measureText("Player 1: 10").width;
+	console.log(playerTextWidth);
 	for(var i = 0; i < userIds.length; i++) {
 		ctx.fillStyle = fontColour;
-		ctx.font = tableFontSize + " " + fontType;
+		ctx.font = tableFontSize + "px " + fontType;
 		ctx.textAlign = "left";
 		num = i + 1;
 		ctx.fillText("Player " + num +": " + userIds[i][1], x, y);
 		y += 40;
 	}
-	var c = new Card(content);
-	c.colour = questionCardColour;
-	c.drawCard(x, y, tableCanvas);
+	x = playerTextWidth * 2;
+	y = 40;
+	currentQuestion = new Card(content);
+	currentQuestion.colour = questionCardColour;
+	currentQuestion.drawCard(x, y, tableCanvas);
 }
 
-// make words fit on cards (other type of container that wraps? Look into it)
+function drawCardsToChooseWinnerFrom(cardArray, canvas) {
+	var ctx = canvas.context;
+	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+	var x = 20;
+	var y = 20;
+	currentQuestion.drawCard(x, y, tableCanvas);
+	x += 100;
+	for (i = 0; i < cardArray.length; i++) {
+		cardArray[i].drawCard(x, y, canvas);
+		x += 100;
+		
+		//if card width added to x position would put it off the canvas, move down
+		if(x + 80 > ctx.canvas.width) {
+			x = 20;
+			y += 130;
+		}
+	}
+}
+
 // make canvas dynamic
 // make table look better (and make card and players wrap around like the hand)
-// add a score
 // Title bar, general look
 // Other quality of life features (augmenting ready players to work w/o restarting, better html, etc.)
 

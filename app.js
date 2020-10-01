@@ -102,7 +102,7 @@ io.on('connection', (socket) => {
 			if(users[turn] == socket) {
 				users[(turn+1)%users.length].emit('yourTurn');
 				passTurn(socket);
-				io.sockets.emit('displayQuestionCard', idsAndScore, "Question"); // put csv file load-in here
+				io.sockets.emit('displayQuestionCard', idsAndScore, "What is the best kind of animal?"); // put csv file load-in here
 			}
 		});
 	

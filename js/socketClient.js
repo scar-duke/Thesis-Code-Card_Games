@@ -50,7 +50,7 @@ socket.on('addCardToTable', function(content, id, usersSize) {
 	card.owner = id;
 	cardsOnTable.push(card);
 	if(cardsOnTable.length == usersSize - 1) {
-		drawOnCanvas(cardsOnTable, tableCanvas);
+		drawCardsToChooseWinnerFrom(cardsOnTable, tableCanvas);
 		socket.emit('chooseWinningCard');
 	}
 });
