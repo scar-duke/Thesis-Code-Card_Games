@@ -2,19 +2,43 @@ var app = require('express')();
 var http = require('http').createServer(app);
 var io = require('socket.io')(http);
 
+const csv = require('csv-parser');
+const fs = require('fs');
+
 // =================================================Set constant variables for server use
-const maxPlayers = 3;
-const minPlayers = 2;
+const maxPlayers = 7;
+const minPlayers = 3;
 
 // =====================================Declare (dynamic) global variables for server use
 var users = [];
 var idsAndScore = [];
+var questionsCardContent = [];
+var answersCardContent = [];
 
 var currentTurn = 1;
 var turn = 0;
 
 //var roomNum = 1; //rooms don't exist yet
 var playersReady = 0;
+
+// ================================================================Parse CSV files
+fs.createReadStream('cardFiles/questions.csv')
+  .pipe(csv())
+  .on('data', (data) => {
+	  questionsCardContent.push(data["Questions"]);
+})
+  .on('end', () => {
+	  fs.close(0, (err) => { if(err) {console.error('Failed to close file', err);} }); 
+});
+fs.createReadStream('cardFiles/answers.csv')
+  .pipe(csv())
+  .on('data', (data) => {
+	  answersCardContent.push(data["Answers"]);
+})
+  .on('end', () => {
+	  fs.close(1, (err) => { if(err) {console.error('Failed to close file', err);} });
+});
+
 
 // =================Get index file and other required external javascript/css function files
 app.get('/', (req, res) => {
@@ -93,7 +117,6 @@ io.on('connection', (socket) => {
 					idsAndScore[i][1] += 1;
 				}
 			}
-			//idsAndScore[idsAndScore.indexOf(card.owner)][1] += 1;
 			io.sockets.emit('clearTable', idsAndScore);
 		});
 	

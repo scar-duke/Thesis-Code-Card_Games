@@ -15,7 +15,7 @@ var handCanvas = {
 	canvas : document.getElementById("handCanvas"),
 	start : function() {
 		this.canvas.width = window.innerWidth - window.innerWidth/3;
-		this.canvas.height = 150;
+		this.canvas.height = spaceBetweenCards*2 + cardHeight;
 		this.context = this.canvas.getContext("2d");
 	}
 }
@@ -23,7 +23,7 @@ var tableCanvas = {
 	canvas : document.getElementById("tableCanvas"),
 	start : function() {
 		this.canvas.width = window.innerWidth - window.innerWidth/3;
-		this.canvas.height = 400;
+		this.canvas.height = 350;
 		this.context = this.canvas.getContext("2d");
 	}
 }
@@ -97,16 +97,16 @@ function drawOnCanvas(cardArray, canvas) {
 	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 	var x = 20;
 	var y = 20;
-	var changeX = cardWidth;
-	var changeY = cardHeight;
+	var changeX = cardWidth + spaceBetweenCards;
+	var changeY = cardHeight + spaceBetweenCards;
 	for (i = 0; i < cardArray.length; i++) {
 		cardArray[i].drawCard(x, y, canvas);
-		x += changeX + spaceBetweenCards;
+		x += changeX;
 		
 		//if card width added to x position would put it off the canvas, move down
 		if(x + changeX > ctx.canvas.width) {
 			x = 20;
-			y += changeY + spaceBetweenCards;
+			y += changeY;
 		}
 	}
 }
@@ -181,16 +181,18 @@ function drawCardsToChooseWinnerFrom(cardArray, canvas) {
 	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 	var x = 20;
 	var y = 20;
+	changeX = cardWidth + spaceBetweenCards;
+	changeY = cardHeight + spaceBetweenCards;
 	currentQuestion.drawCard(x, y, tableCanvas);
-	x += 100;
+	x += changeX;
 	for (i = 0; i < cardArray.length; i++) {
 		cardArray[i].drawCard(x, y, canvas);
-		x += 100;
+		x += changeX;
 		
 		//if card width added to x position would put it off the canvas, move down
-		if(x + 80 > ctx.canvas.width) {
+		if(x + changeX > ctx.canvas.width) {
 			x = 20;
-			y += 130;
+			y += changeY;
 		}
 	}
 }
