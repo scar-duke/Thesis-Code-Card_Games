@@ -15,6 +15,9 @@ var idsAndScore = [];
 var questionsCardContent = [];
 var answersCardContent = [];
 
+var questionsIndex = 0;
+var answersIndex = 0;
+
 var currentTurn = 1;
 var turn = 0;
 
@@ -28,7 +31,7 @@ fs.createReadStream('cardFiles/questions.csv')
 	  questionsCardContent.push(data["Questions"]);
 })
   .on('end', () => {
-	  fs.close(0, (err) => { if(err) {console.error('Failed to close file', err);} }); 
+	  fs.close(0, (err) => { if(err) {console.error('Failed to close file', err);} });
 });
 fs.createReadStream('cardFiles/answers.csv')
   .pipe(csv())
@@ -87,7 +90,8 @@ io.on('connection', (socket) => {
 			playersReady++;
 			if(users.length >= minPlayers & playersReady == users.length) {
 				io.sockets.emit('allPlayersReady');
-				io.sockets.emit('displayQuestionCard', idsAndScore, "Question"); // put csv file load-in here
+				io.sockets.emit('displayQuestionCard', idsAndScore, questionsCardContent[questionsIndex]);
+				questionsIndex++;
 				users[0].emit('yourTurn');
 			}
 		});
@@ -105,7 +109,11 @@ io.on('connection', (socket) => {
 		// When a client wants another card for their hand, send them the CONTENT
 		socket.on('requestedCard', () => {
 			console.log(socket.id + " wants a card");
-			socket.emit('requestedCard', Math.floor(Math.random()*100000)); // put csv file load-in here
+			socket.emit('requestedCard', answersCardContent[answersIndex]);
+			answersIndex++;
+			if(answersIndex >= answersCardContent.length) { //if it's ever greater that's a problem
+				answersIndex = 0;
+			}
 			console.log("Gave them a Card");
 		});
 		
@@ -125,7 +133,11 @@ io.on('connection', (socket) => {
 			if(users[turn] == socket) {
 				users[(turn+1)%users.length].emit('yourTurn');
 				passTurn(socket);
-				io.sockets.emit('displayQuestionCard', idsAndScore, "What is the best kind of animal?"); // put csv file load-in here
+				io.sockets.emit('displayQuestionCard', idsAndScore, questionsCardContent[questionsIndex]);
+				questionsIndex++;
+				if(questionsIndex >= questionsCardContent.length) { //if it's ever greater that's an issue
+					questionsIndex = 0;
+				}
 			}
 		});
 	
