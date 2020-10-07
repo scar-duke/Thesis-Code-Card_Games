@@ -1,7 +1,10 @@
 document.getElementById("readyButton").addEventListener("click", function() {
 	document.getElementById("waitText").style.display = "inline";
+	document.getElementById("nameLabel").style.display = "none";
+	document.getElementById("name").style.display = "none";
 	document.getElementById("readyButton").style.display = "none";
-	socket.emit('playerReady');
+	playerName = document.getElementById("name").value;
+	socket.emit('playerReady', playerName);
 	socket.emit('requestName');
 });
 

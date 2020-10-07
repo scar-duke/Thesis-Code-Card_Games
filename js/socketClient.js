@@ -14,8 +14,8 @@ socket.on('allPlayersReady', function() {
 	canChooseCard = true;
 });
 
-socket.on('nameSent', function(name) {
-	playerName = name;
+socket.on('nameSent', function(id) {
+	socketId = id;
 });
 
 socket.on('clearTable', function(idsAndScore) {

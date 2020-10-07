@@ -1,5 +1,6 @@
 var cardArray = [];
 var playerName = "";
+var socketId = "";
 var isTurn = false;
 var canChooseCard = false;
 var round = 1;
@@ -146,11 +147,11 @@ function updateTableUsers(userIds) {
 	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 	x = 20;
 	y = 40;
-	for(var i = 1; i < userIds.length+1; i++) {
+	for(var i = 0; i < userIds.length; i++) {
 		ctx.fillStyle = fontColour;
 		ctx.font = tableFontSize + "px " + fontType;
 		ctx.textAlign = "left";
-		ctx.fillText("Player " + i +": ", x, y);
+		ctx.fillText(userIds[i][0] + " - ", x, y);
 		y += 40;
 	}
 }
@@ -167,7 +168,7 @@ function updateTableWithCard(userIds, content) {
 		ctx.font = tableFontSize + "px " + fontType;
 		ctx.textAlign = "left";
 		num = i + 1;
-		ctx.fillText("Player " + num +": " + userIds[i][1], x, y);
+		ctx.fillText(userIds[i][0] +" - " + userIds[i][1], x, y);
 		y += 40;
 	}
 	x = playerTextWidth * 2;

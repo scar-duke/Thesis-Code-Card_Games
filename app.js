@@ -68,10 +68,8 @@ app.get('/css/style.css', (req, res) => {
 
 // ========================================================Handle the server-side connections
 io.on('connection', (socket) => {
+	socket.emit('idSent', socket.id);
 	if(users.length < maxPlayers) {
-		users.push(socket);
-		idsAndScore.push([socket.id, 0]);
-		socket.emit('nameSent', socket.id);
 		console.log('a user connected');
 		io.sockets.emit('updateTableUsers', idsAndScore); //change this when implement rooms
 	} else {
@@ -82,14 +80,17 @@ io.on('connection', (socket) => {
 		socket.on('disconnect', () => {
 			users.splice(users.indexOf(socket), 1);
 			for(var i = 0; i < idsAndScore.length; i++) {
-				if(idsAndScore[i][0] == socket.id) {
+				if(idsAndScore[i][2] == socket.id) {
 					idsAndScore.splice(idsAndScore[i], 1);
 				}
 			}
 			io.sockets.emit('updateTableUsers', idsAndScore);
 			console.log('user disconnected');
 		});
-		socket.on('playerReady', () => {
+		socket.on('playerReady', (name) => {
+			users.push(socket);
+			idsAndScore.push([name, 0, socket.id]);
+			io.sockets.emit('updateTableUsers', idsAndScore);
 			playersReady++;
 			if(users.length >= minPlayers & playersReady == users.length) {
 				io.sockets.emit('allPlayersReady');
@@ -133,7 +134,7 @@ io.on('connection', (socket) => {
 		socket.on('winChoice', (card) => {
 			console.log(card.content + " by " + card.owner + " won that round");
 			for(var i = 0; i < idsAndScore.length; i++) {
-				if(idsAndScore[i][0] == card.owner) {
+				if(idsAndScore[i][2] == card.owner) {
 					idsAndScore[i][1] += 1;
 				}
 			}
@@ -159,8 +160,8 @@ io.on('connection', (socket) => {
 				io.sockets.emit('displayQuestionCard', idsAndScore, qCard);
 				
 				if(questionsCardContent.length <= 0) {
-					questionsCardContent = discardedQuestionCards;
-					discardedQuestionCards = [];
+					// end the game ///////////////////////////////////////////////////////////////
+					
 				}
 			}
 		});
