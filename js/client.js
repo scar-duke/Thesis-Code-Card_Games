@@ -17,7 +17,7 @@ window.onload = function () {
 var handCanvas = {
 	canvas : document.getElementById("handCanvas"),
 	start : function() {
-		this.canvas.width = window.innerWidth;
+		this.canvas.width = window.innerWidth - window.innerWidth/3;
 		this.canvas.height = spaceBetweenCards*2 + cardHeight;
 		this.context = this.canvas.getContext("2d");
 	}

@@ -22,35 +22,23 @@ socket.on('clearTable', function(idsAndScore) {
 	cardsOnTable = [];
 	updateTableUsers(idsAndScore);
 	
-	// after clearing the table, check to see if anyone has won
-	if(winByRounds) { // if game is set to win after x rounds
-		if(round/idsAndScore.length == numOfRounds) {
-			// see who has the highest score (make applicable for ties later?)
-			var winner = idsAndScore[0][0];
-			var winningScore = idsAndScore[0][1]
-			for(var i = 1; i < idsAndScore.length; i++) {
-				if(idsAndScore[i][1] > winningScore) {
-					winner = idsAndScore[i][0];
-					winningScore = idsAndScore[i][1];
-				}
-			}
-			// only call the winning code once from the server
-			if(playerName == winner) {
-				socket.emit('playerHasWon', winner);
-			}
-		}
-		round++;
-	} else { // else, game is set to check scores for a possible winner
-		for(var i = 0; i < idsAndScore.length; i++) {
-			if(idsAndScore[i][1] == scoreToWin) {
-				// only call the winning code once from the server
-				if(playerName == idsAndScore[i][0]) {
-					socket.emit('playerHasWon', idsAndScore[i][0]);
-				}
-			}
+	checkForWinner(idsAndScore);
+	canChooseCard = true;
+});
+
+socket.on('chooseWinner', function(idsAndScore) {
+	var winner = idsAndScore[0][0]
+	var winningScore = idsAndScore[0][1];
+	for(var i = 1; i < idsAndScore.length; i++) {
+		if(idsAndScore[i][1] > winningScore) {
+			winner = idsAndScore[i][0];
+			winningScore = idsAndScore[i][1];
 		}
 	}
-	canChooseCard = true;
+	// only call the winning code once from the server
+	if(playerName == winner) {
+		socket.emit('playerHasWon', winner);
+	}
 });
 
 socket.on('endGame', function(winner) {
@@ -61,15 +49,9 @@ socket.on('endGame', function(winner) {
 
 socket.on('requestedCard', function(content) {
 	addNewCardToArray(content);
-	//socket.emit('passTurn');
-	//document.getElementById("turn").style.display = "none";
-	//isTurn = false;
 });
 socket.on('sentCardSuccess', function() {
 	socket.emit('requestedCard');
-	//socket.emit('passTurn');
-	//document.getElementById("turn").style.display = "none";
-	//isTurn = false;
 });
 socket.on('updateTableUsers', function(idsAndScore) {
 	updateTableUsers(idsAndScore);
@@ -114,4 +96,34 @@ function sendCardToServer(socket, card) {
 	socket.emit('sentCard', card);
 	cardArray.splice(cardArray.indexOf(card), 1);
 	drawOnCanvas(cardArray, handCanvas);
+}
+
+function checkForWinner(idsAndScore) {
+	if(winByRounds) { // if game is set to win after x rounds
+		if(round/idsAndScore.length == numOfRounds) {
+			// see who has the highest score (make applicable for ties later?)
+			var winner = idsAndScore[0][0];
+			var winningScore = idsAndScore[0][1]
+			for(var i = 1; i < idsAndScore.length; i++) {
+				if(idsAndScore[i][1] > winningScore) {
+					winner = idsAndScore[i][0];
+					winningScore = idsAndScore[i][1];
+				}
+			}
+			// only call the winning code once from the server
+			if(playerName == winner) {
+				socket.emit('playerHasWon', winner);
+			}
+		}
+		round++;
+	} else { // else, game is set to check scores for a possible winner
+		for(var i = 0; i < idsAndScore.length; i++) {
+			if(idsAndScore[i][1] == scoreToWin) {
+				// only call the winning code once from the server
+				if(playerName == idsAndScore[i][0]) {
+					socket.emit('playerHasWon', idsAndScore[i][0]);
+				}
+			}
+		}
+	}
 }

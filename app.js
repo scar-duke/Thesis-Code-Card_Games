@@ -161,7 +161,7 @@ io.on('connection', (socket) => {
 				io.sockets.emit('displayQuestionCard', idsAndScore, qCard);
 				
 				if(questionsCardContent.length <= 0) {
-					// end the game ///////////////////////////////////////////////////////////////
+					io.sockets.emit('chooseWinner', idsAndScore);
 					
 				}
 			}
