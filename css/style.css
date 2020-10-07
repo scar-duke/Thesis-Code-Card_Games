@@ -1,4 +1,4 @@
-#waitText, #sorryText {
+#waitText, #sorryText, #handHeader{
 	display: none;
 }
 
@@ -6,12 +6,14 @@
 	border: 1px solid #d3d3d3;
 	background-color: #f1f1f1;
 	display: none;
+	/*width: 100%;*/
 }
 
 #tableCanvas {
 	border: 1px solid #d3d3d3;
 	background-color: #C4D9FE;
 	display: block;
+	/*width: 100%;*/
 }
 
 button {

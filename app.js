@@ -13,7 +13,9 @@ const minPlayers = 3;
 var users = [];
 var idsAndScore = [];
 var questionsCardContent = [];
+var discardedQuestionCards = [];
 var answersCardContent = [];
+var discardedAnswerCards = [];
 
 var questionsIndex = 0;
 var answersIndex = 0;
@@ -69,6 +71,7 @@ io.on('connection', (socket) => {
 	if(users.length < maxPlayers) {
 		users.push(socket);
 		idsAndScore.push([socket.id, 0]);
+		socket.emit('nameSent', socket.id);
 		console.log('a user connected');
 		io.sockets.emit('updateTableUsers', idsAndScore); //change this when implement rooms
 	} else {
@@ -90,8 +93,12 @@ io.on('connection', (socket) => {
 			playersReady++;
 			if(users.length >= minPlayers & playersReady == users.length) {
 				io.sockets.emit('allPlayersReady');
-				io.sockets.emit('displayQuestionCard', idsAndScore, questionsCardContent[questionsIndex]);
-				questionsIndex++;
+				
+				var qCard = questionsCardContent[Math.floor(Math.random() * questionsCardContent.length)];
+				questionsCardContent.splice(questionsCardContent.indexOf(qCard), 1);
+				discardedQuestionCards.push(qCard);
+				io.sockets.emit('displayQuestionCard', idsAndScore, qCard);
+				
 				users[0].emit('yourTurn');
 			}
 		});
@@ -109,10 +116,15 @@ io.on('connection', (socket) => {
 		// When a client wants another card for their hand, send them the CONTENT
 		socket.on('requestedCard', () => {
 			console.log(socket.id + " wants a card");
-			socket.emit('requestedCard', answersCardContent[answersIndex]);
-			answersIndex++;
-			if(answersIndex >= answersCardContent.length) { //if it's ever greater that's a problem
-				answersIndex = 0;
+			var aCard = answersCardContent[Math.floor(Math.random() * answersCardContent.length)];
+			answersCardContent.splice(answersCardContent.indexOf(aCard), 1);
+			discardedAnswerCards.push(aCard);
+			socket.emit('requestedCard', aCard);
+			
+			// if all answer cards have been used, reuse the discarded deck
+			if(answersCardContent.length <= 0) {
+				answersCardContent = discardedAnswerCards;
+				discardedAnswerCards = [];
 			}
 			console.log("Gave them a Card");
 		});
@@ -127,16 +139,28 @@ io.on('connection', (socket) => {
 			}
 			io.sockets.emit('clearTable', idsAndScore);
 		});
+		
+		// When a player has won the game (through rounds or score)
+		socket.on('playerHasWon', (winner) => {
+			console.log("Game Winner is " + winner);
+			
+			//io.sockets.emit('endGame', winner);
+		});
 	
 		// Begin the next turn by passing it to the next player in the array
 		socket.on('passTurn', () => {
 			if(users[turn] == socket) {
 				users[(turn+1)%users.length].emit('yourTurn');
 				passTurn(socket);
-				io.sockets.emit('displayQuestionCard', idsAndScore, questionsCardContent[questionsIndex]);
-				questionsIndex++;
-				if(questionsIndex >= questionsCardContent.length) { //if it's ever greater that's an issue
-					questionsIndex = 0;
+				
+				var qCard = questionsCardContent[Math.floor(Math.random() * questionsCardContent.length)];
+				questionsCardContent.splice(questionsCardContent.indexOf(qCard), 1);
+				discardedQuestionCards.push(qCard);
+				io.sockets.emit('displayQuestionCard', idsAndScore, qCard);
+				
+				if(questionsCardContent.length <= 0) {
+					questionsCardContent = discardedQuestionCards;
+					discardedQuestionCards = [];
 				}
 			}
 		});

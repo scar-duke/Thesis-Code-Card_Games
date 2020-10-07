@@ -1,6 +1,8 @@
 var cardArray = [];
+var playerName = "";
 var isTurn = false;
 var canChooseCard = false;
+var round = 1;
 var currentQuestion;
 
 window.onload = function () {
@@ -14,7 +16,7 @@ window.onload = function () {
 var handCanvas = {
 	canvas : document.getElementById("handCanvas"),
 	start : function() {
-		this.canvas.width = window.innerWidth - window.innerWidth/3;
+		this.canvas.width = window.innerWidth;
 		this.canvas.height = spaceBetweenCards*2 + cardHeight;
 		this.context = this.canvas.getContext("2d");
 	}
@@ -160,7 +162,6 @@ function updateTableWithCard(userIds, content) {
 	y = 40;
 	// put in dummy string variable to determine where to place card out of way of player details
 	var playerTextWidth = ctx.measureText("Player 1: 10").width;
-	console.log(playerTextWidth);
 	for(var i = 0; i < userIds.length; i++) {
 		ctx.fillStyle = fontColour;
 		ctx.font = tableFontSize + "px " + fontType;
@@ -197,9 +198,8 @@ function drawCardsToChooseWinnerFrom(cardArray, canvas) {
 	}
 }
 
-// make canvas dynamic
+// make canvas dynamic BUT NOT AUGMENT CARD SIZES FOR CLICKING BECAUSE THAT'S FUCKED UP RIGHT NOW!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
 // make table look better (and make card and players wrap around like the hand)
-// Title bar, general look
 // Other quality of life features (augmenting ready players to work w/o restarting, better html, etc.)
 
 // randomly pick player to go first
