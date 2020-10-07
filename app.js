@@ -81,6 +81,7 @@ io.on('connection', (socket) => {
 			users.splice(users.indexOf(socket), 1);
 			for(var i = 0; i < idsAndScore.length; i++) {
 				if(idsAndScore[i][2] == socket.id) {
+					playersReady--;
 					idsAndScore.splice(idsAndScore[i], 1);
 				}
 			}
