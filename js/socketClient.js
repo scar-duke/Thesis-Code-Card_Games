@@ -4,6 +4,15 @@ var cardsOnTable = [];
 socket.on('maxPlayersReached', function() {
 	document.getElementById("sorryText").style.display = "block";
 	document.getElementById("readyButton").style.display = "none";
+	document.getElementById("nameLabel").style.display = "none";
+	document.getElementById("name").style.display = "none";
+});
+
+socket.on('gameInProgress', function() {
+	document.getElementById("sorryProgressText").style.display = "block";
+	document.getElementById("readyButton").style.display = "none";
+	document.getElementById("nameLabel").style.display = "none";
+	document.getElementById("name").style.display = "none";
 });
 
 socket.on('allPlayersReady', function() {
@@ -14,7 +23,7 @@ socket.on('allPlayersReady', function() {
 	canChooseCard = true;
 });
 
-socket.on('nameSent', function(id) {
+socket.on('idSent', function(id) {
 	socketId = id;
 });
 
@@ -26,17 +35,18 @@ socket.on('clearTable', function(idsAndScore) {
 	canChooseCard = true;
 });
 
+// used to call forced-winner scenarios (i.e. if we run out of question cards)
 socket.on('chooseWinner', function(idsAndScore) {
-	var winner = idsAndScore[0][0]
+	var winner = idsAndScore[0][2]
 	var winningScore = idsAndScore[0][1];
 	for(var i = 1; i < idsAndScore.length; i++) {
 		if(idsAndScore[i][1] > winningScore) {
-			winner = idsAndScore[i][0];
+			winner = idsAndScore[i][2];
 			winningScore = idsAndScore[i][1];
 		}
 	}
 	// only call the winning code once from the server
-	if(playerName == winner) {
+	if(socketId == winner) {
 		socket.emit('playerHasWon', winner);
 	}
 });
@@ -74,8 +84,10 @@ socket.on('addCardToTable', function(content, id, usersSize) {
 	card.owner = id;
 	cardsOnTable.push(card);
 	if(cardsOnTable.length == usersSize - 1) {
+		if(isTurn) {
+			document.getElementById("judgeText").style.display = "block";
+		}
 		drawCardsToChooseWinnerFrom(cardsOnTable, tableCanvas);
-		socket.emit('chooseWinningCard');
 	}
 });
 
@@ -102,16 +114,16 @@ function checkForWinner(idsAndScore) {
 	if(winByRounds) { // if game is set to win after x rounds
 		if(round/idsAndScore.length == numOfRounds) {
 			// see who has the highest score (make applicable for ties later?)
-			var winner = idsAndScore[0][0];
+			var winner = idsAndScore[0][2];
 			var winningScore = idsAndScore[0][1]
 			for(var i = 1; i < idsAndScore.length; i++) {
 				if(idsAndScore[i][1] > winningScore) {
-					winner = idsAndScore[i][0];
+					winner = idsAndScore[i][2];
 					winningScore = idsAndScore[i][1];
 				}
 			}
 			// only call the winning code once from the server
-			if(playerName == winner) {
+			if(socketId == winner) {
 				socket.emit('playerHasWon', winner);
 			}
 		}
@@ -120,8 +132,8 @@ function checkForWinner(idsAndScore) {
 		for(var i = 0; i < idsAndScore.length; i++) {
 			if(idsAndScore[i][1] == scoreToWin) {
 				// only call the winning code once from the server
-				if(playerName == idsAndScore[i][0]) {
-					socket.emit('playerHasWon', idsAndScore[i][0]);
+				if(socketId == idsAndScore[i][2]) {
+					socket.emit('playerHasWon', idsAndScore[i][2]);
 				}
 			}
 		}

@@ -17,8 +17,7 @@ var discardedQuestionCards = [];
 var answersCardContent = [];
 var discardedAnswerCards = [];
 
-var questionsIndex = 0;
-var answersIndex = 0;
+var gameInProgress = false;
 
 var currentTurn = 1;
 var turn = 0;
@@ -69,7 +68,10 @@ app.get('/css/style.css', (req, res) => {
 // ========================================================Handle the server-side connections
 io.on('connection', (socket) => {
 	socket.emit('idSent', socket.id);
-	if(users.length < maxPlayers) {
+	if(gameInProgress) {
+		socket.emit('gameInProgress');
+		socket.disconnect(true);
+	} else if(users.length < maxPlayers) {
 		console.log('a user connected');
 		io.sockets.emit('updateTableUsers', idsAndScore); //change this when implement rooms
 	} else {
@@ -87,6 +89,12 @@ io.on('connection', (socket) => {
 			}
 			io.sockets.emit('updateTableUsers', idsAndScore);
 			console.log('user disconnected');
+			
+			// end game if enough players disconnect
+			if(users.length < minPlayers) {
+				gameInProgress = false;
+				//io.sockets.emit('callForRestart');
+			}
 		});
 		socket.on('playerReady', (name) => {
 			users.push(socket);
@@ -94,6 +102,7 @@ io.on('connection', (socket) => {
 			io.sockets.emit('updateTableUsers', idsAndScore);
 			playersReady++;
 			if(users.length >= minPlayers & playersReady == users.length) {
+				gameInProgress = true;
 				io.sockets.emit('allPlayersReady');
 				
 				var qCard = questionsCardContent[Math.floor(Math.random() * questionsCardContent.length)];
@@ -145,6 +154,8 @@ io.on('connection', (socket) => {
 		// When a player has won the game (through rounds or score)
 		socket.on('playerHasWon', (winner) => {
 			console.log("Game Winner is " + winner);
+			// note - winner is the socket.id of the winner. It is set this way
+			// just in case there are two people with the same nickname
 			
 			//io.sockets.emit('endGame', winner);
 		});

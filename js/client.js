@@ -151,6 +151,9 @@ function updateTableUsers(userIds) {
 		ctx.fillStyle = fontColour;
 		ctx.font = tableFontSize + "px " + fontType;
 		ctx.textAlign = "left";
+		if(userIds[i][2] == socketId) {
+			ctx.font = "bold " + tableFontSize + "px " + fontType;
+		}
 		ctx.fillText(userIds[i][0] + " - ", x, y);
 		y += 40;
 	}
@@ -167,7 +170,9 @@ function updateTableWithCard(userIds, content) {
 		ctx.fillStyle = fontColour;
 		ctx.font = tableFontSize + "px " + fontType;
 		ctx.textAlign = "left";
-		num = i + 1;
+		if(userIds[i][2] == socketId) {
+			ctx.font = "bold " + tableFontSize + "px " + fontType;
+		}
 		ctx.fillText(userIds[i][0] +" - " + userIds[i][1], x, y);
 		y += 40;
 	}

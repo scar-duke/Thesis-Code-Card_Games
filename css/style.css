@@ -1,4 +1,4 @@
-#waitText, #sorryText, #handHeader{
+#waitText, #sorryText, #sorryProgressText, #judgeText, #handHeader{
 	display: none;
 }
 
