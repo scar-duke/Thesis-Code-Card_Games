@@ -96,22 +96,28 @@ io.on('connection', (socket) => {
 				//io.sockets.emit('callForRestart');
 			}
 		});
+		
 		socket.on('playerReady', (name) => {
 			users.push(socket);
 			idsAndScore.push([name, 0, socket.id]);
 			io.sockets.emit('updateTableUsers', idsAndScore);
 			playersReady++;
 			if(users.length >= minPlayers & playersReady == users.length) {
-				gameInProgress = true;
-				io.sockets.emit('allPlayersReady');
-				
-				var qCard = questionsCardContent[Math.floor(Math.random() * questionsCardContent.length)];
-				questionsCardContent.splice(questionsCardContent.indexOf(qCard), 1);
-				discardedQuestionCards.push(qCard);
-				io.sockets.emit('displayQuestionCard', idsAndScore, qCard);
-				
-				users[0].emit('yourTurn');
+				// send a 'check for ready to go' to allow more than min players to join
+				io.sockets.emit('revealGoButton');
 			}
+		});
+		
+		socket.on('startGame', () => {
+			gameInProgress = true;
+			io.sockets.emit('allPlayersReady');
+				
+			var qCard = questionsCardContent[Math.floor(Math.random() * questionsCardContent.length)];
+			questionsCardContent.splice(questionsCardContent.indexOf(qCard), 1);
+			discardedQuestionCards.push(qCard);
+			io.sockets.emit('displayQuestionCard', idsAndScore, qCard);
+				
+			users[0].emit('yourTurn');
 		});
 	
 		// when a client sends a card to the server, put it on the table
@@ -157,7 +163,7 @@ io.on('connection', (socket) => {
 			// note - winner is the socket.id of the winner. It is set this way
 			// just in case there are two people with the same nickname
 			
-			//io.sockets.emit('endGame', winner);
+			io.sockets.emit('endGame', idsAndScore, winner);
 		});
 	
 		// Begin the next turn by passing it to the next player in the array

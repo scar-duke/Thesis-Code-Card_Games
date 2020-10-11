@@ -1,11 +1,15 @@
 document.getElementById("readyButton").addEventListener("click", function() {
-	document.getElementById("waitText").style.display = "inline";
+	document.getElementById("waitText").style.display = "block";
 	document.getElementById("nameLabel").style.display = "none";
 	document.getElementById("name").style.display = "none";
 	document.getElementById("readyButton").style.display = "none";
 	playerName = document.getElementById("name").value;
 	socket.emit('playerReady', playerName);
 	socket.emit('requestName');
+});
+
+document.getElementById("goButton").addEventListener("click", function() {
+	socket.emit('startGame');
 });
 
 document.getElementById("getCard").addEventListener("click", function(){

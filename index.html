@@ -10,9 +10,9 @@
 	<body>
 		<div class="container" id="canvasLocation">
 			<h1 id="titleHeader"></h1>
-			<canvas id="tableCanvas"></canvas>
+			<canvas id="tableCanvas" class='img-responsive'></canvas>
 			<h2 id ="handHeader"></h2>
-			<canvas id="handCanvas"></canvas>
+			<canvas id="handCanvas" class='img-responsive'></canvas>
 			
 			<br/>
 			<p id="waitText">Waiting for other Players...</p>
@@ -21,6 +21,8 @@
 			<label for="name" id="nameLabel">Enter your name:</label>
 			<input type="text" id="name">
 			<button type="button" id="readyButton">I'm Ready!</button>
+			<button type="button" id="goButton">Click when Everyone is Ready to Play!</button>
+			
 			<p id="judgeText">Choose a Winner!</p>
 			<button type="button" id="getCard">Get a Card</button>
 			<!--<button type="button" id="turn">Pass Turn</button>-->

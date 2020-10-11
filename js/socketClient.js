@@ -17,6 +17,7 @@ socket.on('gameInProgress', function() {
 
 socket.on('allPlayersReady', function() {
 	document.getElementById("waitText").style.display = "none";
+	document.getElementById("goButton").style.display = "none";
 	document.getElementById("handHeader").style.display = "block";
 	document.getElementById("handCanvas").style.display = "block";
 	document.getElementById("handHeader").innerHTML = playerName + "'s Hand";
@@ -25,6 +26,10 @@ socket.on('allPlayersReady', function() {
 
 socket.on('idSent', function(id) {
 	socketId = id;
+});
+
+socket.on('revealGoButton', function() {
+	document.getElementById("goButton").style.display = "block";
 });
 
 socket.on('clearTable', function(idsAndScore) {
@@ -51,10 +56,16 @@ socket.on('chooseWinner', function(idsAndScore) {
 	}
 });
 
-socket.on('endGame', function(winner) {
+socket.on('endGame', function(idsAndScore, winner) {
 	// disable everything else and display the winner, effectively ending the game
 	isTurn = false;
 	canChooseCard = false;
+	
+	document.getElementById("handHeader").style.display = "none";
+	document.getElementById("handCanvas").style.display = "none";
+	drawWinner(idsAndScore, winner);
+	document.getElementById("playAgainButton").style.display = "block";
+	document.getElementById("quitButton").style.display = "block";
 });
 
 socket.on('requestedCard', function(content) {

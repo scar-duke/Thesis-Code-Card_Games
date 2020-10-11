@@ -204,8 +204,27 @@ function drawCardsToChooseWinnerFrom(cardArray, canvas) {
 	}
 }
 
+function drawWinner(idsAndScore, winnerId) {
+	var ctx = tableCanvas.context;
+	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+	var winner;
+	var score;
+	var x = ctx.canvas.width / 2;
+	var y = ctx.canvas.height / 2;
+	
+	
+	ctx.fillStyle = fontColour;
+	ctx.font = tableFontSize + "px " + fontType;
+	ctx.textAlign = "center";
+	for(var i = 0; i < idsAndScore.length; i++) {
+		if(idsAndScore[i][2] == winnerId) {
+			winner = idsAndScore[i][0];
+			score = idsAndScore[i][1];
+		}
+	}
+	ctx.fillText("The winner is: " + winner + " with a score of " + score + "!", x, y);
+}
+
 // make canvas dynamic BUT NOT AUGMENT CARD SIZES FOR CLICKING BECAUSE THAT'S FUCKED UP RIGHT NOW!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
 // make table look better (and make card and players wrap around like the hand)
 // Other quality of life features (augmenting ready players to work w/o restarting, better html, etc.)
-
-// randomly pick player to go first
