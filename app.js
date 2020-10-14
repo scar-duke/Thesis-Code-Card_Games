@@ -88,7 +88,7 @@ io.on('connection', (socket) => {
 				}
 			}
 			io.sockets.emit('updateTableUsers', idsAndScore);
-			console.log('user disconnected');
+			console.log(socket.id + ' user disconnected');
 			
 			// end game if enough players disconnect
 			if(users.length < minPlayers) {
@@ -132,7 +132,7 @@ io.on('connection', (socket) => {
 	
 		// When a client wants another card for their hand, send them the CONTENT
 		socket.on('requestedCard', () => {
-			console.log(socket.id + " wants a card");
+			//console.log(socket.id + " wants a card");
 			var aCard = answersCardContent[Math.floor(Math.random() * answersCardContent.length)];
 			answersCardContent.splice(answersCardContent.indexOf(aCard), 1);
 			discardedAnswerCards.push(aCard);
@@ -143,7 +143,7 @@ io.on('connection', (socket) => {
 				answersCardContent = discardedAnswerCards;
 				discardedAnswerCards = [];
 			}
-			console.log("Gave them a Card");
+			//console.log("Gave them a Card");
 		});
 		
 		// When the choosing player sends their winning choice

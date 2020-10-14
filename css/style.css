@@ -5,20 +5,25 @@
 #handCanvas {
 	border: 1px solid #d3d3d3;
 	background-color: #f1f1f1;
-	display: none;
-	/*width: 100%;*/
+	visibility: hidden;
+	width: 100%;
 }
 
 #tableCanvas {
 	border: 1px solid #d3d3d3;
 	background-color: #C4D9FE;
 	display: block;
-	/*width: 100%;*/
+	width: 100%;
 }
 
 button {
 	display: none;
 }
+
+h1 {
+	text-align: center;
+}
+
 #readyButton {
 	display: inline;
 }

@@ -19,7 +19,7 @@ socket.on('allPlayersReady', function() {
 	document.getElementById("waitText").style.display = "none";
 	document.getElementById("goButton").style.display = "none";
 	document.getElementById("handHeader").style.display = "block";
-	document.getElementById("handCanvas").style.display = "block";
+	document.getElementById("handCanvas").style.visibility = "visible";
 	document.getElementById("handHeader").innerHTML = playerName + "'s Hand";
 	canChooseCard = true;
 });

@@ -12,12 +12,11 @@ window.onload = function () {
 	for(i = 0; i < numOfCardsInHand; i++) {
 		socket.emit('requestedCard');
 	}
-	drawOnCanvas(cardArray, handCanvas);
 };
 var handCanvas = {
 	canvas : document.getElementById("handCanvas"),
 	start : function() {
-		this.canvas.width = window.innerWidth - window.innerWidth/3;
+		this.canvas.width = this.canvas.clientWidth;
 		this.canvas.height = spaceBetweenCards*2 + cardHeight;
 		this.context = this.canvas.getContext("2d");
 	}
@@ -25,7 +24,7 @@ var handCanvas = {
 var tableCanvas = {
 	canvas : document.getElementById("tableCanvas"),
 	start : function() {
-		this.canvas.width = window.innerWidth - window.innerWidth/3;
+		this.canvas.width = this.canvas.clientWidth;
 		this.canvas.height = 350;
 		this.context = this.canvas.getContext("2d");
 	}
@@ -103,6 +102,7 @@ function drawOnCanvas(cardArray, canvas) {
 	var changeX = cardWidth + spaceBetweenCards;
 	var changeY = cardHeight + spaceBetweenCards;
 	for (i = 0; i < cardArray.length; i++) {
+		//console.log(cardArray[i]);
 		cardArray[i].drawCard(x, y, canvas);
 		x += changeX;
 		
@@ -110,6 +110,10 @@ function drawOnCanvas(cardArray, canvas) {
 		if(x + changeX > ctx.canvas.width) {
 			x = 20;
 			y += changeY;
+		}
+		//if card height added to the y position would put it off the canvas, make it bigger
+		if(y + cardHeight > ctx.canvas.height) {
+			ctx.canvas.height += cardHeight + spaceBetweenCards;
 		}
 	}
 }
@@ -164,23 +168,38 @@ function updateTableWithCard(userIds, content) {
 	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 	x = 20;
 	y = 40;
-	// put in dummy string variable to determine where to place card out of way of player details
-	var playerTextWidth = ctx.measureText("Player 1: 10").width;
+	var playerTextWidth = 0;
+	
 	for(var i = 0; i < userIds.length; i++) {
+		//first draw the player names on the canvas
 		ctx.fillStyle = fontColour;
 		ctx.font = tableFontSize + "px " + fontType;
 		ctx.textAlign = "left";
 		if(userIds[i][2] == socketId) {
 			ctx.font = "bold " + tableFontSize + "px " + fontType;
 		}
-		ctx.fillText(userIds[i][0] +" - " + userIds[i][1], x, y);
+		currentTxt = userIds[i][0] +" - " + userIds[i][1];
+		ctx.fillText(currentTxt, x, y);
 		y += 40;
+		
+		//then figure out which is the longest to ensure proper card placement
+		if(ctx.measureText(currentTxt).width > playerTextWidth) {
+			playerTextWidth = ctx.measureText(currentTxt).width;
+		}
 	}
-	x = playerTextWidth * 2;
-	y = 40;
+	x = 40 + playerTextWidth + spaceBetweenCards;
 	currentQuestion = new Card(content);
 	currentQuestion.colour = questionCardColour;
-	currentQuestion.drawCard(x, y, tableCanvas);
+	if(x + currentQuestion.width > ctx.canvas.width) {
+		x = 40;
+		if(y + currentQuestion.height > ctx.canvas.height) {
+			ctx.canvas.height += currentQuestion.height + spaceBetweenCards;
+		}
+		currentQuestion.drawCard(x, y, tableCanvas);
+	} else {
+		y = 40;
+		currentQuestion.drawCard(x, y, tableCanvas);
+	}
 }
 
 function drawCardsToChooseWinnerFrom(cardArray, canvas) {
@@ -200,6 +219,10 @@ function drawCardsToChooseWinnerFrom(cardArray, canvas) {
 		if(x + changeX > ctx.canvas.width) {
 			x = 20;
 			y += changeY;
+		}
+		//if card height added to the y position would put it off the canvas, make it bigger
+		if(y + cardHeight > ctx.canvas.height) {
+			ctx.canvas.height += cardHeight + spaceBetweenCards;
 		}
 	}
 }
