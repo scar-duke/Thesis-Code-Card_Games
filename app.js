@@ -84,7 +84,8 @@ io.on('connection', (socket) => {
 			for(var i = 0; i < idsAndScore.length; i++) {
 				if(idsAndScore[i][2] == socket.id) {
 					playersReady--;
-					idsAndScore.splice(idsAndScore[i], 1);
+					idsAndScore.splice(i, 1);
+					break;
 				}
 			}
 			io.sockets.emit('updateTableUsers', idsAndScore);
@@ -92,8 +93,12 @@ io.on('connection', (socket) => {
 			
 			// end game if enough players disconnect
 			if(users.length < minPlayers) {
-				gameInProgress = false;
-				//io.sockets.emit('callForRestart');
+				if(gameInProgress) {
+					gameInProgress = false;
+					//io.sockets.emit('callForRestart');
+				} else {
+					//hide click when everyone is ready button
+				}
 			}
 		});
 		
