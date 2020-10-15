@@ -235,7 +235,7 @@ function drawWinner(idsAndScore, winnerId) {
 	var x = ctx.canvas.width / 2;
 	var y = ctx.canvas.height / 2;
 	
-	
+	//first determine the winner by searching the socket id to get the name and score
 	ctx.fillStyle = fontColour;
 	ctx.font = tableFontSize + "px " + fontType;
 	ctx.textAlign = "center";
@@ -243,9 +243,32 @@ function drawWinner(idsAndScore, winnerId) {
 		if(idsAndScore[i][2] == winnerId) {
 			winner = idsAndScore[i][0];
 			score = idsAndScore[i][1];
+			break;
 		}
 	}
-	ctx.fillText("The winner is: " + winner + " with a score of " + score + "!", x, y);
+	
+	//then format the winner text on the canvas where it can be read by everyone
+	var txt = "The winner is: " + winner + ", with a score of " + score + "!";
+	var ret = "";
+	if(ctx.measureText(txt).width > ctx.canvas.width) {
+		var res = txt.split(" ");
+		for(var i = 0; i < res.length; i++) {
+			if(ctx.measureText(ret + " " + res[i]).width < ctx.canvas.width) {
+				ret += res[i] + " ";
+			} else {
+				ret = ret.substring(0, ret.length-1); // gets rid of the space at the end
+				ctx.fillText(ret, x, y);
+				y += tableFontSize;
+				i--;
+				ret = "";
+			}
+		}
+	} else { // content is fine, doesn't need put on multiple lines
+		ret = txt;
+		ctx.fillText(ret, x, y);
+		ret = "";
+	}
+	ctx.fillText(ret, x, y);
 }
 
 // make canvas dynamic BUT NOT AUGMENT CARD SIZES FOR CLICKING BECAUSE THAT'S FUCKED UP RIGHT NOW!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1

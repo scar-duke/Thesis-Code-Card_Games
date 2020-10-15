@@ -157,6 +157,7 @@ io.on('connection', (socket) => {
 			for(var i = 0; i < idsAndScore.length; i++) {
 				if(idsAndScore[i][2] == card.owner) {
 					idsAndScore[i][1] += 1;
+					break;
 				}
 			}
 			io.sockets.emit('clearTable', idsAndScore);

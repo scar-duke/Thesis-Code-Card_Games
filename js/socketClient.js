@@ -64,8 +64,6 @@ socket.on('endGame', function(idsAndScore, winner) {
 	document.getElementById("handHeader").style.display = "none";
 	document.getElementById("handCanvas").style.display = "none";
 	drawWinner(idsAndScore, winner);
-	document.getElementById("playAgainButton").style.display = "block";
-	document.getElementById("quitButton").style.display = "block";
 });
 
 socket.on('requestedCard', function(content) {

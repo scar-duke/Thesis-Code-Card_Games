@@ -5,7 +5,6 @@ document.getElementById("readyButton").addEventListener("click", function() {
 	document.getElementById("readyButton").style.display = "none";
 	playerName = document.getElementById("name").value;
 	socket.emit('playerReady', playerName);
-	socket.emit('requestName');
 });
 
 document.getElementById("goButton").addEventListener("click", function() {
