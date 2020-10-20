@@ -22,7 +22,12 @@ var gameInProgress = false;
 var currentTurn = 1;
 var turn = 0;
 
-//var roomNum = 1; //rooms don't exist yet
+var maxNumOfRooms = 5;
+var usersInRooms = [];
+for(var i = 0; i < maxNumOfRooms; i++) {
+	usersInRooms.push(0);
+}
+
 var playersReady = 0;
 
 // ================================================================Parse CSV files
@@ -68,6 +73,8 @@ app.get('/css/style.css', (req, res) => {
 // ========================================================Handle the server-side connections
 io.on('connection', (socket) => {
 	socket.emit('idSent', socket.id);
+	socket.emit('availableRooms', usersInRooms, maxPlayers);
+	
 	if(gameInProgress) {
 		socket.emit('gameInProgress');
 		socket.disconnect(true);
@@ -102,7 +109,7 @@ io.on('connection', (socket) => {
 			}
 		});
 		
-		socket.on('playerReady', (name) => {
+		socket.on('playerReady', (name, roomToJoin) => {
 			users.push(socket);
 			idsAndScore.push([name, 0, socket.id]);
 			io.sockets.emit('updateTableUsers', idsAndScore);
