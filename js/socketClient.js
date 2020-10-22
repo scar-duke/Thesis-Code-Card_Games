@@ -1,5 +1,6 @@
 var socket = io();
 var cardsOnTable = [];
+var roomToJoin;
 
 socket.on('maxPlayersReached', function() {
 	document.getElementById("sorryText").style.display = "block";
@@ -26,6 +27,51 @@ socket.on('allPlayersReady', function() {
 
 socket.on('idSent', function(id) {
 	socketId = id;
+});
+
+socket.on('availableRooms', function(usersInRooms, maxPlayers) {
+	var table = document.getElementById("roomsTable");
+	var placeInArray = 0;
+	var roomNum = 1;
+	
+	for(var i = 0; i < usersInRooms.length/2; i++) {
+		var x = document.createElement("TR");
+		x.setAttribute("id", "row"+i);
+		table.appendChild(x);
+		
+		for(var j = 0; j < 2; j++) {
+			if(usersInRooms[placeInArray] != undefined) {
+				var y = document.createElement("TD");
+				y.setAttribute("id", placeInArray);
+				var z = document.createTextNode("Room " + roomNum + ": " +
+											usersInRooms[placeInArray].length + "/" + maxPlayers);
+				y.appendChild(z);
+				document.getElementById("row"+i).appendChild(y);
+				roomNum++;
+				placeInArray++;
+			}
+		}
+	}
+	
+	var row = document.getElementById('roomsTable').rows;
+	for(var i = 0; i < row.length; i++) {
+        for(var j = 0; j < row[i].cells.length; j++ ) {
+            row[i].cells[j].addEventListener('click', function(){
+				for(var i = 0; i < row.length; i++) {
+					for(var j = 0; j < row[i].cells.length; j++) {
+						row[i].cells[j].style.backgroundColor = "white";
+						row[i].cells[j].style.color = "black";
+					}
+				}
+				if(usersInRooms[parseInt(this.id)].length < maxPlayers) {
+					document.getElementById("readyButton").style.display = "block";
+					this.style.backgroundColor = roomTableSelectColour;
+					this.style.color = "white";
+					roomToJoin = parseInt(this.id);
+				}
+            });
+        }
+    }
 });
 
 socket.on('revealGoButton', function() {
@@ -70,9 +116,13 @@ socket.on('requestedCard', function(content) {
 	addNewCardToArray(content);
 });
 socket.on('sentCardSuccess', function() {
-	socket.emit('requestedCard');
+	socket.emit('requestedCard', roomToJoin);
 });
 socket.on('updateTableUsers', function(idsAndScore) {
+	if(playerName != undefined) {
+		var room = parseInt(roomToJoin) + 1;
+		document.getElementById("roomTitle").innerHTML = "Room " + room;
+	}
 	updateTableUsers(idsAndScore);
 });
 socket.on('yourTurn', function() {
@@ -103,7 +153,7 @@ socket.on('addCardToTable', function(content, id, usersSize) {
 
 // Requests a new card from the server
 function getNewCard(socket) {
-	socket.emit('requestedCard');
+	socket.emit('requestedCard', roomNum);
 }
 
 // Takes content recieved from the server and adds it to the card hand array
@@ -113,8 +163,8 @@ function addNewCardToArray(content) {
 }
 
 // Sends chosen card to server and removes it from the array
-function sendCardToServer(socket, card) {
-	socket.emit('sentCard', card);
+function sendCardToServer(socket, card, roomNum) {
+	socket.emit('sentCard', card, roomNum);
 	cardArray.splice(cardArray.indexOf(card), 1);
 	drawOnCanvas(cardArray, handCanvas);
 }
@@ -133,7 +183,7 @@ function checkForWinner(idsAndScore) {
 			}
 			// only call the winning code once from the server
 			if(socketId == winner) {
-				socket.emit('playerHasWon', winner);
+				socket.emit('playerHasWon', winner, roomToJoin);
 			}
 		}
 		round++;
@@ -142,7 +192,7 @@ function checkForWinner(idsAndScore) {
 			if(idsAndScore[i][1] == scoreToWin) {
 				// only call the winning code once from the server
 				if(socketId == idsAndScore[i][2]) {
-					socket.emit('playerHasWon', idsAndScore[i][2]);
+					socket.emit('playerHasWon', idsAndScore[i][2], roomToJoin);
 				}
 			}
 		}

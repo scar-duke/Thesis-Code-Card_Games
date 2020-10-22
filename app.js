@@ -8,28 +8,50 @@ const fs = require('fs');
 // =================================================Set constant variables for server use
 const maxPlayers = 7;
 const minPlayers = 3;
+const maxNumOfRooms = 5;
 
 // =====================================Declare (dynamic) global variables for server use
+var usersInRooms = [];
+
 var users = [];
 var idsAndScore = [];
+
 var questionsCardContent = [];
 var discardedQuestionCards = [];
 var answersCardContent = [];
 var discardedAnswerCards = [];
 
-var gameInProgress = false;
+var gameInProgress = []; //check if game is currently in progress for joining player
 
-var currentTurn = 1;
-var turn = 0;
+var currentTurn = [];//set to 1 to start for each room
+var turn = []; //set to 0 to start for each room
 
-//var roomNum = 1; //rooms don't exist yet
-var playersReady = 0;
+var playersReady = [];
+
+// ===============================Initialize all previous variables for room usage
+for(var i = 0; i < maxNumOfRooms; i++) {
+	usersInRooms.push([]);
+	users.push([]);
+	idsAndScore.push([]);
+	
+	questionsCardContent.push([]);
+	discardedQuestionCards.push([]);
+	answersCardContent.push([]);
+	discardedAnswerCards.push([]);
+
+	gameInProgress.push(false);
+	currentTurn.push(1);
+	turn.push(0);
+	playersReady.push(0);
+}
 
 // ================================================================Parse CSV files
 fs.createReadStream('cardFiles/questions.csv')
   .pipe(csv())
   .on('data', (data) => {
-	  questionsCardContent.push(data["Questions"]);
+	  for(var i = 0; i < maxNumOfRooms; i++) {
+		questionsCardContent[i].push(data["Questions"]);
+	  }
 })
   .on('end', () => {
 	  fs.close(0, (err) => { if(err) {console.error('Failed to close file', err);} });
@@ -37,7 +59,9 @@ fs.createReadStream('cardFiles/questions.csv')
 fs.createReadStream('cardFiles/answers.csv')
   .pipe(csv())
   .on('data', (data) => {
-	  answersCardContent.push(data["Answers"]);
+	  for(var i = 0; i < maxNumOfRooms; i++) {
+		answersCardContent[i].push(data["Answers"]);
+	  }
 })
   .on('end', () => {
 	  fs.close(1, (err) => { if(err) {console.error('Failed to close file', err);} });
@@ -68,124 +92,144 @@ app.get('/css/style.css', (req, res) => {
 // ========================================================Handle the server-side connections
 io.on('connection', (socket) => {
 	socket.emit('idSent', socket.id);
-	if(gameInProgress) {
-		socket.emit('gameInProgress');
-		socket.disconnect(true);
-	} else if(users.length < maxPlayers) {
-		console.log('a user connected');
-		io.sockets.emit('updateTableUsers', idsAndScore); //change this when implement rooms
-	} else {
-		socket.emit('maxPlayersReached');
-		socket.disconnect(true);
-	}
+	socket.emit('availableRooms', usersInRooms, maxPlayers);
+	
 		// when a client disconnects from the server
 		socket.on('disconnect', () => {
-			users.splice(users.indexOf(socket), 1);
-			for(var i = 0; i < idsAndScore.length; i++) {
-				if(idsAndScore[i][2] == socket.id) {
-					playersReady--;
-					idsAndScore.splice(i, 1);
-					break;
-				}
+			for(var i = 0; i < maxNumOfRooms; i++) {
+				// if the disconnected user was already connected to a room
+				if(usersInRooms[i].indexOf(socket.id) != -1) {
+					usersInRooms[i].splice(usersInRooms[i].indexOf(socket.id), 1);
+					users[i].splice(users[i].indexOf(socket), 1);
+					for(var j = 0; j < idsAndScore.length; j++) {
+						if(idsAndScore[i][j][2] == socket.id) {
+							playersReady[i]--;
+							idsAndScore[i].splice(j, 1);
+							break;
+						}
+					}
+					///
+					io.sockets.in("room"+i).emit('updateTableUsers', idsAndScore[i]);
+				}		
 			}
-			io.sockets.emit('updateTableUsers', idsAndScore);
 			console.log(socket.id + ' user disconnected');
 			
 			// end game if enough players disconnect
-			if(users.length < minPlayers) {
-				if(gameInProgress) {
-					gameInProgress = false;
+			//if(users.length < minPlayers) {
+			//	if(gameInProgress) {
+			//		gameInProgress = false;
 					//io.sockets.emit('callForRestart');
-				} else {
+			//	} else {
 					//hide click when everyone is ready button
-				}
-			}
+			//	}
+			//}
 		});
 		
-		socket.on('playerReady', (name) => {
-			users.push(socket);
-			idsAndScore.push([name, 0, socket.id]);
-			io.sockets.emit('updateTableUsers', idsAndScore);
-			playersReady++;
-			if(users.length >= minPlayers & playersReady == users.length) {
+		socket.on('playerReady', (name, roomToJoin) => {
+			console.log(name + " wants to join room " + roomToJoin);
+			socket.join("room"+roomToJoin);
+			
+			//after joining the room, check if the game is in progress or not
+			if(gameInProgress[roomToJoin]) {
+				socket.emit('gameInProgress');
+				socket.disconnect(true);
+			} else if(users[roomToJoin].length < maxPlayers) {
+				console.log('a user connected');
+				io.sockets.in("room"+roomToJoin).emit('updateTableUsers', idsAndScore[roomToJoin]);
+			} else {
+				socket.emit('maxPlayersReached');
+				socket.disconnect(true);
+			}
+			
+			usersInRooms[roomToJoin].push(socket.id);
+			
+			users[roomToJoin].push(socket);
+			idsAndScore[roomToJoin].push([name, 0, socket.id]);
+			io.sockets.in("room"+roomToJoin).emit('updateTableUsers', idsAndScore[roomToJoin]);
+			playersReady[roomToJoin]++;
+			if(playersReady[roomToJoin] >= minPlayers & playersReady[roomToJoin] <= maxPlayers) {
 				// send a 'check for ready to go' to allow more than min players to join
-				io.sockets.emit('revealGoButton');
+				io.sockets.in("room"+roomToJoin).emit('revealGoButton');
 			}
 		});
 		
-		socket.on('startGame', () => {
-			gameInProgress = true;
-			io.sockets.emit('allPlayersReady');
+		socket.on('startGame', (roomNum) => {
+			gameInProgress[roomNum] = true;
+			io.sockets.in("room"+roomNum).emit('allPlayersReady');
 				
-			var qCard = questionsCardContent[Math.floor(Math.random() * questionsCardContent.length)];
-			questionsCardContent.splice(questionsCardContent.indexOf(qCard), 1);
-			discardedQuestionCards.push(qCard);
-			io.sockets.emit('displayQuestionCard', idsAndScore, qCard);
+			var qCard = questionsCardContent[roomNum][Math.floor(Math.random() * questionsCardContent[roomNum].length)];
+			questionsCardContent[roomNum].splice(questionsCardContent[roomNum].indexOf(qCard), 1);
+			discardedQuestionCards[roomNum].push(qCard);
+			io.sockets.in("room"+roomNum).emit('displayQuestionCard', idsAndScore[roomNum], qCard);
 				
-			users[0].emit('yourTurn');
+			users[roomNum][0].emit('yourTurn');
 		});
 	
 		// when a client sends a card to the server, put it on the table
-		socket.on('sentCard', (card) => {
+		socket.on('sentCard', (card, roomNum) => {
 			console.log("Recieved card from " + socket.id);
-			console.log(card);
-			io.sockets.emit('addCardToTable', card.content, socket.id, users.length);
+			//console.log(card);
+			io.sockets.in("room"+roomNum).emit('addCardToTable', card.content, socket.id, users[roomNum].length);
 			
 			//give player another card after they sent one in
 			socket.emit('sentCardSuccess');
 		});
 	
 		// When a client wants another card for their hand, send them the CONTENT
-		socket.on('requestedCard', () => {
+		socket.on('requestedCard', (roomNum) => {
 			//console.log(socket.id + " wants a card");
-			var aCard = answersCardContent[Math.floor(Math.random() * answersCardContent.length)];
-			answersCardContent.splice(answersCardContent.indexOf(aCard), 1);
-			discardedAnswerCards.push(aCard);
+			var aCard = answersCardContent[roomNum][Math.floor(Math.random() * answersCardContent[roomNum].length)];
+			answersCardContent[roomNum].splice(answersCardContent[roomNum].indexOf(aCard), 1);
+			discardedAnswerCards[roomNum].push(aCard);
 			socket.emit('requestedCard', aCard);
 			
 			// if all answer cards have been used, reuse the discarded deck
-			if(answersCardContent.length <= 0) {
-				answersCardContent = discardedAnswerCards;
-				discardedAnswerCards = [];
+			if(answersCardContent[roomNum].length <= 0) {
+				answersCardContent[roomNum] = discardedAnswerCards[roomNum];
+				discardedAnswerCards[roomNum] = [];
 			}
 			//console.log("Gave them a Card");
 		});
 		
 		// When the choosing player sends their winning choice
-		socket.on('winChoice', (card) => {
-			console.log(card.content + " by " + card.owner + " won that round");
-			for(var i = 0; i < idsAndScore.length; i++) {
-				if(idsAndScore[i][2] == card.owner) {
-					idsAndScore[i][1] += 1;
+		socket.on('winChoice', (card, roomNum) => {
+			console.log(card.content + " by " + card.owner + " in room " + roomNum + " won that round");
+			for(var i = 0; i < idsAndScore[roomNum].length; i++) {
+				if(idsAndScore[roomNum][i][2] == card.owner) {
+					idsAndScore[roomNum][i][1] += 1;
 					break;
 				}
 			}
-			io.sockets.emit('clearTable', idsAndScore);
+			io.sockets.in("room"+roomNum).emit('clearTable', idsAndScore[roomNum]);
 		});
 		
 		// When a player has won the game (through rounds or score)
-		socket.on('playerHasWon', (winner) => {
-			console.log("Game Winner is " + winner);
+		socket.on('playerHasWon', (winner, roomNum) => {
+			console.log("Game Winner in room " + roomNum + " is " + winner);
 			// note - winner is the socket.id of the winner. It is set this way
 			// just in case there are two people with the same nickname
 			
-			io.sockets.emit('endGame', idsAndScore, winner);
+			io.sockets.in("room"+roomNum).emit('endGame', idsAndScore[roomNum], winner);
+			
+			// this should probably be moved elsewhere (after all players disconnect from room) but whatever
+			gameInProgress[roomNum] = false;
 		});
 	
 		// Begin the next turn by passing it to the next player in the array
-		socket.on('passTurn', () => {
-			if(users[turn] == socket) {
-				users[(turn+1)%users.length].emit('yourTurn');
-				passTurn(socket);
+		socket.on('passTurn', (roomNum) => {
+			if(users[roomNum][turn[roomNum]] == socket) {
+				//send the turn booleans to the next socket and keep track of the turn changing
+				users[roomNum][(turn[roomNum]+1)%users[roomNum].length].emit('yourTurn');
+				turn[roomNum] = currentTurn[roomNum]++ % users[roomNum].length;
+				console.log("next turn triggered");
 				
-				var qCard = questionsCardContent[Math.floor(Math.random() * questionsCardContent.length)];
-				questionsCardContent.splice(questionsCardContent.indexOf(qCard), 1);
-				discardedQuestionCards.push(qCard);
-				io.sockets.emit('displayQuestionCard', idsAndScore, qCard);
+				var qCard = questionsCardContent[roomNum][Math.floor(Math.random() * questionsCardContent[roomNum].length)];
+				questionsCardContent[roomNum].splice(questionsCardContent[roomNum].indexOf(qCard), 1);
+				discardedQuestionCards[roomNum].push(qCard);
+				io.sockets.in("room"+roomNum).emit('displayQuestionCard', idsAndScore[roomNum], qCard);
 				
-				if(questionsCardContent.length <= 0) {
-					io.sockets.emit('chooseWinner', idsAndScore);
-					
+				if(questionsCardContent[roomNum].length <= 0) {
+					io.sockets.in("room"+roomNum).emit('chooseWinner', idsAndScore[roomNum]);
 				}
 			}
 		});
@@ -195,10 +239,3 @@ io.on('connection', (socket) => {
 http.listen(3000, () => {
 	console.log('listening on *:3000');
 });
-
-
-// ================================================================Extra methods
-function passTurn(socket) {
-	turn = currentTurn++ % users.length;
-	console.log("next turn triggered");
-}

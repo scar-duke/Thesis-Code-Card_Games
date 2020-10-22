@@ -1,5 +1,5 @@
 var cardArray = [];
-var playerName = "";
+var playerName;
 var socketId = "";
 var isTurn = false;
 var canChooseCard = false;
@@ -9,9 +9,6 @@ var currentQuestion;
 window.onload = function () {
 	handCanvas.start();
 	tableCanvas.start();
-	for(i = 0; i < numOfCardsInHand; i++) {
-		socket.emit('requestedCard');
-	}
 };
 var handCanvas = {
 	canvas : document.getElementById("handCanvas"),
@@ -270,7 +267,3 @@ function drawWinner(idsAndScore, winnerId) {
 	}
 	ctx.fillText(ret, x, y);
 }
-
-// make canvas dynamic BUT NOT AUGMENT CARD SIZES FOR CLICKING BECAUSE THAT'S FUCKED UP RIGHT NOW!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
-// make table look better (and make card and players wrap around like the hand)
-// Other quality of life features (augmenting ready players to work w/o restarting, better html, etc.)
