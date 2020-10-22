@@ -19,6 +19,11 @@ document.getElementById("goButton").addEventListener("click", function() {
 	socket.emit('startGame', roomToJoin);
 });
 
+document.getElementById("quitButton").addEventListener("click", function() {
+	socket.emit('quitTheRoom', roomToJoin);
+	document.getElementById("quitButton").style.display = "none";
+});
+
 document.getElementById("getCard").addEventListener("click", function(){
 	if(canChooseCard) {
 		getNewCard(socket);

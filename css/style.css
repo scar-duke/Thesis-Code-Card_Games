@@ -1,4 +1,4 @@
-#waitText, #sorryText, #sorryProgressText, #judgeText, #handHeader{
+#waitText, #sorryText, #sorryProgressText, #sorryGameInterruptText, #judgeText, #handHeader{
 	display: none;
 }
 
@@ -22,10 +22,6 @@ button {
 
 h1 {
 	text-align: center;
-}
-
-#readyButton {
-	display: none;
 }
 
 table {

@@ -25,6 +25,12 @@ socket.on('allPlayersReady', function() {
 	canChooseCard = true;
 });
 
+socket.on('callForRestart', function() {
+	document.getElementById("sorryGameInterruptText").style.display = "block";
+	document.getElementById("handHeader").style.display = "none";
+	document.getElementById("handCanvas").style.visibility = "hidden";
+});
+
 socket.on('idSent', function(id) {
 	socketId = id;
 });
@@ -73,9 +79,20 @@ socket.on('availableRooms', function(usersInRooms, maxPlayers) {
         }
     }
 });
+socket.on('updateAvailableRooms', function(usersInRooms, roomNum, maxPlayers) {
+	if(roomToJoin == undefined) {
+		console.log(document.getElementById(roomNum).innerText);
+		var room = roomNum + 1;
+		document.getElementById(roomNum).innerText = "Room " + room + ": " +
+										usersInRooms[roomNum].length + "/" + maxPlayers;
+	}
+});
 
 socket.on('revealGoButton', function() {
 	document.getElementById("goButton").style.display = "block";
+});
+socket.on('hideGoButton', function() {
+	document.getElementById("goButton").style.display = "none";
 });
 
 socket.on('clearTable', function(idsAndScore) {
@@ -109,6 +126,7 @@ socket.on('endGame', function(idsAndScore, winner) {
 	
 	document.getElementById("handHeader").style.display = "none";
 	document.getElementById("handCanvas").style.display = "none";
+	document.getElementById("quitButton").style.display = "block";
 	drawWinner(idsAndScore, winner);
 });
 

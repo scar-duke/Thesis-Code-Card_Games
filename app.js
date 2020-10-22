@@ -10,6 +10,10 @@ const maxPlayers = 7;
 const minPlayers = 3;
 const maxNumOfRooms = 5;
 
+// these hold unaltered arrays of the csv read-in for usage
+var constQCards = [];
+var constACards = [];
+
 // =====================================Declare (dynamic) global variables for server use
 var usersInRooms = [];
 
@@ -49,6 +53,7 @@ for(var i = 0; i < maxNumOfRooms; i++) {
 fs.createReadStream('cardFiles/questions.csv')
   .pipe(csv())
   .on('data', (data) => {
+	  constQCards.push(data["Questions"]);
 	  for(var i = 0; i < maxNumOfRooms; i++) {
 		questionsCardContent[i].push(data["Questions"]);
 	  }
@@ -59,6 +64,7 @@ fs.createReadStream('cardFiles/questions.csv')
 fs.createReadStream('cardFiles/answers.csv')
   .pipe(csv())
   .on('data', (data) => {
+	  constACards.push(data["Answers"]);
 	  for(var i = 0; i < maxNumOfRooms; i++) {
 		answersCardContent[i].push(data["Answers"]);
 	  }
@@ -108,49 +114,65 @@ io.on('connection', (socket) => {
 							break;
 						}
 					}
-					///
-					io.sockets.in("room"+i).emit('updateTableUsers', idsAndScore[i]);
+					if(!gameInProgress[i]) {
+						io.sockets.in("room"+i).emit('updateTableUsers', idsAndScore[i]);
+					}
+					
+					// end game if enough players disconnect
+					if(usersInRooms[i].length < minPlayers) {
+						if(gameInProgress[i]) {
+							//if game is already started, disconnect all players
+							gameInProgress[i] = false;
+							io.sockets.in("room"+i).emit('callForRestart');
+							for(var j = 0; j < users[i].length; j++) {
+								users[i][j].disconnect(true);
+							}
+							//clean up the room for the next game
+							usersInRooms[i] = [];
+							users[i] = [];
+							idsAndScore[i] = [];
+							questionsCardContent[i] = constQCards;
+							discardedQuestionCards[i] = [];
+							answersCardContent[i] = constACards;
+							discardedAnswerCards[i] = [];
+							currentTurn[i] = 1;
+							turn[i] = 0;
+							playersReady[i] = 0;
+						} else {
+							//hide click when everyone is ready button
+							io.sockets.in("room"+i).emit('hideGoButton');
+						}
+					}
 				}		
 			}
 			console.log(socket.id + ' user disconnected');
-			
-			// end game if enough players disconnect
-			//if(users.length < minPlayers) {
-			//	if(gameInProgress) {
-			//		gameInProgress = false;
-					//io.sockets.emit('callForRestart');
-			//	} else {
-					//hide click when everyone is ready button
-			//	}
-			//}
 		});
 		
 		socket.on('playerReady', (name, roomToJoin) => {
 			console.log(name + " wants to join room " + roomToJoin);
-			socket.join("room"+roomToJoin);
 			
-			//after joining the room, check if the game is in progress or not
+			//check if game is in progress or not
 			if(gameInProgress[roomToJoin]) {
 				socket.emit('gameInProgress');
 				socket.disconnect(true);
 			} else if(users[roomToJoin].length < maxPlayers) {
 				console.log('a user connected');
-				io.sockets.in("room"+roomToJoin).emit('updateTableUsers', idsAndScore[roomToJoin]);
+				socket.join("room"+roomToJoin);
+				users[roomToJoin].push(socket);
+				usersInRooms[roomToJoin].push(socket.id);
+				idsAndScore[roomToJoin].push([name, 0, socket.id]);
+				playersReady[roomToJoin]++;
+				if(playersReady[roomToJoin] >= minPlayers & playersReady[roomToJoin] <= maxPlayers) {
+					// send a 'check for ready to go' to allow more than min players to join
+					io.sockets.in("room"+roomToJoin).emit('revealGoButton');
+				}
 			} else {
 				socket.emit('maxPlayersReached');
 				socket.disconnect(true);
 			}
 			
-			usersInRooms[roomToJoin].push(socket.id);
+			io.sockets.emit('updateAvailableRooms', usersInRooms, roomToJoin, maxPlayers);
 			
-			users[roomToJoin].push(socket);
-			idsAndScore[roomToJoin].push([name, 0, socket.id]);
-			io.sockets.in("room"+roomToJoin).emit('updateTableUsers', idsAndScore[roomToJoin]);
-			playersReady[roomToJoin]++;
-			if(playersReady[roomToJoin] >= minPlayers & playersReady[roomToJoin] <= maxPlayers) {
-				// send a 'check for ready to go' to allow more than min players to join
-				io.sockets.in("room"+roomToJoin).emit('revealGoButton');
-			}
 		});
 		
 		socket.on('startGame', (roomNum) => {
@@ -212,7 +234,25 @@ io.on('connection', (socket) => {
 			io.sockets.in("room"+roomNum).emit('endGame', idsAndScore[roomNum], winner);
 			
 			// this should probably be moved elsewhere (after all players disconnect from room) but whatever
+			//gameInProgress[roomNum] = false;
+		});
+		
+		socket.on('quitTheRoom', (roomNum) => {
+			for(var i = 0; i < users[roomNum].length; i++) {
+				users[roomNum][i].disconnect(true);
+			}
+			//clean up the room for the next game
+			usersInRooms[roomNum] = [];
+			users[roomNum] = [];
+			idsAndScore[roomNum] = [];
+			questionsCardContent[roomNum] = constQCards;
+			discardedQuestionCards[roomNum] = [];
+			answersCardContent[roomNum] = constACards;
+			discardedAnswerCards[roomNum] = [];
 			gameInProgress[roomNum] = false;
+			currentTurn[roomNum] = 1;
+			turn[roomNum] = 0;
+			playersReady[roomNum] = 0;
 		});
 	
 		// Begin the next turn by passing it to the next player in the array
