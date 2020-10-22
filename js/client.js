@@ -9,9 +9,6 @@ var currentQuestion;
 window.onload = function () {
 	handCanvas.start();
 	tableCanvas.start();
-	for(i = 0; i < numOfCardsInHand; i++) {
-		socket.emit('requestedCard');
-	}
 };
 var handCanvas = {
 	canvas : document.getElementById("handCanvas"),
