@@ -17,6 +17,8 @@ socket.on('gameInProgress', function() {
 });
 
 socket.on('allPlayersReady', function() {
+	
+	
 	document.getElementById("waitText").style.display = "none";
 	document.getElementById("goButton").style.display = "none";
 	document.getElementById("handHeader").style.display = "block";
@@ -80,12 +82,30 @@ socket.on('availableRooms', function(usersInRooms, maxPlayers) {
     }
 });
 socket.on('updateAvailableRooms', function(usersInRooms, roomNum, maxPlayers) {
-	if(roomToJoin == undefined) {
-		console.log(document.getElementById(roomNum).innerText);
-		var room = roomNum + 1;
-		document.getElementById(roomNum).innerText = "Room " + room + ": " +
+	var room = roomNum + 1;
+	document.getElementById(roomNum).innerText = "Room " + room + ": " +
 										usersInRooms[roomNum].length + "/" + maxPlayers;
-	}
+});
+
+socket.on('returnToMenu', function() {
+	//clear the canvases
+	var ctx = tableCanvas.context;
+	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+	ctx = handCanvas.context;
+	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+	
+	//clear local variables and hide stuff
+	cardArray = [];
+	isTurn = false
+	canChooseCard = false;
+	round = 1;
+	roomToJoin = "";
+	document.getElementById("roomTitle").style.display = "none";
+	document.getElementById("quitButton").style.display = "none";
+	
+	//show the rooms table
+	document.getElementById("chooseRoom").style.display = "block";
+	document.getElementById("roomsTable").style.display = "block";
 });
 
 socket.on('revealGoButton', function() {
@@ -125,7 +145,7 @@ socket.on('endGame', function(idsAndScore, winner) {
 	canChooseCard = false;
 	
 	document.getElementById("handHeader").style.display = "none";
-	document.getElementById("handCanvas").style.display = "none";
+	document.getElementById("handCanvas").style.visibility = "hidden";
 	document.getElementById("quitButton").style.display = "block";
 	drawWinner(idsAndScore, winner);
 });
@@ -139,6 +159,7 @@ socket.on('sentCardSuccess', function() {
 socket.on('updateTableUsers', function(idsAndScore) {
 	if(playerName != undefined) {
 		var room = parseInt(roomToJoin) + 1;
+		document.getElementById("roomTitle").style.display = "block";
 		document.getElementById("roomTitle").innerHTML = "Room " + room;
 	}
 	updateTableUsers(idsAndScore);
@@ -148,10 +169,10 @@ socket.on('yourTurn', function() {
 	isTurn = true;
 	canChooseCard = false;
 	document.getElementById("handHeader").style.display = "none";
-	document.getElementById("handCanvas").style.display = "none";
+	document.getElementById("handCanvas").style.visibility = "hidden";
 });
 
-//CAH socket functions
+
 socket.on('displayQuestionCard', function(idsAndScore, content) {
 	updateTableWithCard(idsAndScore, content);
 });

@@ -7,7 +7,7 @@ const fs = require('fs');
 
 // =================================================Set constant variables for server use
 const maxPlayers = 7;
-const minPlayers = 3;
+const minPlayers = 2;
 const maxNumOfRooms = 5;
 
 // these hold unaltered arrays of the csv read-in for usage
@@ -106,6 +106,7 @@ io.on('connection', (socket) => {
 				// if the disconnected user was already connected to a room
 				if(usersInRooms[i].indexOf(socket.id) != -1) {
 					usersInRooms[i].splice(usersInRooms[i].indexOf(socket.id), 1);
+					io.sockets.emit('updateAvailableRooms', usersInRooms, i, maxPlayers);
 					users[i].splice(users[i].indexOf(socket), 1);
 					for(var j = 0; j < idsAndScore.length; j++) {
 						if(idsAndScore[i][j][2] == socket.id) {
@@ -162,6 +163,7 @@ io.on('connection', (socket) => {
 				usersInRooms[roomToJoin].push(socket.id);
 				idsAndScore[roomToJoin].push([name, 0, socket.id]);
 				playersReady[roomToJoin]++;
+				io.sockets.in("room"+roomToJoin).emit('updateTableUsers', idsAndScore[roomToJoin]);
 				if(playersReady[roomToJoin] >= minPlayers & playersReady[roomToJoin] <= maxPlayers) {
 					// send a 'check for ready to go' to allow more than min players to join
 					io.sockets.in("room"+roomToJoin).emit('revealGoButton');
@@ -232,15 +234,15 @@ io.on('connection', (socket) => {
 			// just in case there are two people with the same nickname
 			
 			io.sockets.in("room"+roomNum).emit('endGame', idsAndScore[roomNum], winner);
-			
-			// this should probably be moved elsewhere (after all players disconnect from room) but whatever
-			//gameInProgress[roomNum] = false;
 		});
 		
 		socket.on('quitTheRoom', (roomNum) => {
+			gameInProgress[roomNum] = false;
+			io.sockets.in("room"+roomNum).emit('returnToMenu');
 			for(var i = 0; i < users[roomNum].length; i++) {
-				users[roomNum][i].disconnect(true);
+				users[roomNum][i].leave("room"+roomNum);
 			}
+			
 			//clean up the room for the next game
 			usersInRooms[roomNum] = [];
 			users[roomNum] = [];
@@ -249,10 +251,11 @@ io.on('connection', (socket) => {
 			discardedQuestionCards[roomNum] = [];
 			answersCardContent[roomNum] = constACards;
 			discardedAnswerCards[roomNum] = [];
-			gameInProgress[roomNum] = false;
 			currentTurn[roomNum] = 1;
 			turn[roomNum] = 0;
 			playersReady[roomNum] = 0;
+			
+			io.sockets.emit('updateAvailableRooms', usersInRooms, roomNum, maxPlayers);
 		});
 	
 		// Begin the next turn by passing it to the next player in the array

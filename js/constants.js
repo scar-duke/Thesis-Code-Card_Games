@@ -1,4 +1,4 @@
-//Add Later, but keep in mind
+//roomTableSelectColour should be kept similar to general css background theme
 var roomTableSelectColour = "blue";
 var handCardColour = "white";
 var questionCardColour = "black";
@@ -20,6 +20,6 @@ var profName = "Dr. Cessna";
 // Scoring rules - will players win by reaching a certain
 // score first, or whoever has the most points at the end
 // of x rounds (one round = everyone has gone once)?
-var winByRounds = true;
+var winByRounds = false;
 var numOfRounds = 1;
 var scoreToWin = 1;
