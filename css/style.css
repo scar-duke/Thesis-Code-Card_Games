@@ -1,4 +1,9 @@
-#waitText, #sorryText, #sorryProgressText, #sorryGameInterruptText, #judgeText, #handHeader{
+#waitText, #judgeText, #handHeader {
+	display: none;
+}
+
+#nameInUseText, #sorryText, #sorryProgressText, #sorryGameInterruptText {
+	color: red;
 	display: none;
 }
 

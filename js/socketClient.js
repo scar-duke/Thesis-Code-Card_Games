@@ -27,6 +27,27 @@ socket.on('allPlayersReady', function() {
 	canChooseCard = true;
 });
 
+socket.on('nameUnique', function(unique) {
+	if(unique) {
+		document.getElementById("nameInUseText").style.display = "none";
+		document.getElementById("waitText").style.display = "block";
+		document.getElementById("nameLabel").style.display = "none";
+		document.getElementById("name").style.display = "none";
+		document.getElementById("readyButton").style.display = "none";
+		document.getElementById("chooseRoom").style.display = "none";
+		document.getElementById("roomsTable").style.display = "none";
+		playerName = document.getElementById("name").value;
+		socket.emit('playerReady', playerName, roomToJoin);
+		for(i = 0; i < numOfCardsInHand; i++) {
+			socket.emit('requestedCard', roomToJoin);
+		}
+	} else {
+		document.getElementById("nameInUseText").style.display = "block";
+		document.getElementById("nameLabel").style.display = "inline";
+		document.getElementById("name").style.display = "inline";
+	}
+});
+
 socket.on('callForRestart', function() {
 	document.getElementById("sorryGameInterruptText").style.display = "block";
 	document.getElementById("handHeader").style.display = "none";

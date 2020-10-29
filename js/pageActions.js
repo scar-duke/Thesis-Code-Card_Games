@@ -1,16 +1,6 @@
 document.getElementById("readyButton").addEventListener("click", function() {
 	if(roomToJoin != undefined) {
-		document.getElementById("waitText").style.display = "block";
-		document.getElementById("nameLabel").style.display = "none";
-		document.getElementById("name").style.display = "none";
-		document.getElementById("readyButton").style.display = "none";
-		document.getElementById("chooseRoom").style.display = "none";
-		document.getElementById("roomsTable").style.display = "none";
-		playerName = document.getElementById("name").value;
-		socket.emit('playerReady', playerName, roomToJoin);
-		for(i = 0; i < numOfCardsInHand; i++) {
-			socket.emit('requestedCard', roomToJoin);
-		}
+		socket.emit('checkName', document.getElementById("name").value, roomToJoin);
 	}
 });
 

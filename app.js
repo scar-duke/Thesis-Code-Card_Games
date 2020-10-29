@@ -7,7 +7,7 @@ const fs = require('fs');
 
 // =================================================Set constant variables for server use
 const maxPlayers = 7;
-const minPlayers = 2;
+const minPlayers = 3;
 const maxNumOfRooms = 5;
 
 // these hold unaltered arrays of the csv read-in for usage
@@ -147,6 +147,16 @@ io.on('connection', (socket) => {
 				}		
 			}
 			console.log(socket.id + ' user disconnected');
+		});
+		
+		socket.on('checkName', (name, roomToJoin) => {
+			var unique = true;
+			for(var i = 0; i < idsAndScore[roomToJoin].length; i++) {
+				if(name == idsAndScore[roomToJoin][i][0]) {
+					unique = false;
+				}
+			}
+			socket.emit('nameUnique', unique);
 		});
 		
 		socket.on('playerReady', (name, roomToJoin) => {
