@@ -10,7 +10,7 @@ const maxPlayers = 7;
 const minPlayers = 3;
 const maxNumOfRooms = 5;
 
-// these hold unaltered arrays of the csv read-in for usage
+// these hold unaltered arrays of the csv read-in
 var constQCards = [];
 var constACards = [];
 
@@ -164,9 +164,9 @@ io.on('connection', (socket) => {
 			
 			//check if game is in progress or not
 			if(gameInProgress[roomToJoin]) {
-				socket.emit('gameInProgress');
-				socket.disconnect(true);
+				socket.emit('gameInProgress', true);
 			} else if(users[roomToJoin].length < maxPlayers) {
+				socket.emit('gameInProgress', false);
 				console.log('a user connected');
 				socket.join("room"+roomToJoin);
 				users[roomToJoin].push(socket);
@@ -180,7 +180,6 @@ io.on('connection', (socket) => {
 				}
 			} else {
 				socket.emit('maxPlayersReached');
-				socket.disconnect(true);
 			}
 			
 			io.sockets.emit('updateAvailableRooms', usersInRooms, roomToJoin, maxPlayers);

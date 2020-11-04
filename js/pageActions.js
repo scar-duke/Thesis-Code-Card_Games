@@ -36,7 +36,7 @@ document.getElementById("tableCanvas").addEventListener("click", function(e) {
 		isTurn = false;
 		canChooseCard = true;
 		document.getElementById("handHeader").style.display = "block";
-		document.getElementById("handCanvas").style.display = "block";
+		document.getElementById("handCanvas").style.visibility = "visible";
 		document.getElementById("judgeText").style.display = "none";
 	}
 });

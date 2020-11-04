@@ -2,33 +2,24 @@ var socket = io();
 var cardsOnTable = [];
 var roomToJoin;
 
+//gives the socket reference to its own server id
+socket.on('idSent', function(id) {
+	socketId = id;
+});
+
+//============================================ Functions for errors joining a room
+//if max players in a room has been reached, throw an error
+//********this is a function that shouldn't ever be called due to the way
+//the join table works, but it exists just in case I do something dumb with the table
 socket.on('maxPlayersReached', function() {
 	document.getElementById("sorryText").style.display = "block";
-	document.getElementById("readyButton").style.display = "none";
-	document.getElementById("nameLabel").style.display = "none";
-	document.getElementById("name").style.display = "none";
 });
 
-socket.on('gameInProgress', function() {
-	document.getElementById("sorryProgressText").style.display = "block";
-	document.getElementById("readyButton").style.display = "none";
-	document.getElementById("nameLabel").style.display = "none";
-	document.getElementById("name").style.display = "none";
-});
-
-socket.on('allPlayersReady', function() {
-	
-	
-	document.getElementById("waitText").style.display = "none";
-	document.getElementById("goButton").style.display = "none";
-	document.getElementById("handHeader").style.display = "block";
-	document.getElementById("handCanvas").style.visibility = "visible";
-	document.getElementById("handHeader").innerHTML = playerName + "'s Hand";
-	canChooseCard = true;
-});
-
-socket.on('nameUnique', function(unique) {
-	if(unique) {
+//if game has already started in room, show error. Otherwise, show waiting for others
+socket.on('gameInProgress', function(isInProgress) {
+	if(isInProgress) {
+		document.getElementById("sorryProgressText").style.display = "block";
+	} else {
 		document.getElementById("nameInUseText").style.display = "none";
 		document.getElementById("waitText").style.display = "block";
 		document.getElementById("nameLabel").style.display = "none";
@@ -36,28 +27,16 @@ socket.on('nameUnique', function(unique) {
 		document.getElementById("readyButton").style.display = "none";
 		document.getElementById("chooseRoom").style.display = "none";
 		document.getElementById("roomsTable").style.display = "none";
-		playerName = document.getElementById("name").value;
-		socket.emit('playerReady', playerName, roomToJoin);
 		for(i = 0; i < numOfCardsInHand; i++) {
 			socket.emit('requestedCard', roomToJoin);
 		}
-	} else {
-		document.getElementById("nameInUseText").style.display = "block";
-		document.getElementById("nameLabel").style.display = "inline";
-		document.getElementById("name").style.display = "inline";
 	}
 });
 
-socket.on('callForRestart', function() {
-	document.getElementById("sorryGameInterruptText").style.display = "block";
-	document.getElementById("handHeader").style.display = "none";
-	document.getElementById("handCanvas").style.visibility = "hidden";
-});
 
-socket.on('idSent', function(id) {
-	socketId = id;
-});
 
+//==================================================== Functions for start menu use
+//print the table of rooms available and not available for joining
 socket.on('availableRooms', function(usersInRooms, maxPlayers) {
 	var table = document.getElementById("roomsTable");
 	var placeInArray = 0;
@@ -82,6 +61,7 @@ socket.on('availableRooms', function(usersInRooms, maxPlayers) {
 		}
 	}
 	
+	//put a click listener on every cell of the table
 	var row = document.getElementById('roomsTable').rows;
 	for(var i = 0; i < row.length; i++) {
         for(var j = 0; j < row[i].cells.length; j++ ) {
@@ -102,12 +82,61 @@ socket.on('availableRooms', function(usersInRooms, maxPlayers) {
         }
     }
 });
+//update table cells to show when people join rooms
 socket.on('updateAvailableRooms', function(usersInRooms, roomNum, maxPlayers) {
 	var room = roomNum + 1;
 	document.getElementById(roomNum).innerText = "Room " + room + ": " +
 										usersInRooms[roomNum].length + "/" + maxPlayers;
 });
 
+//after the check for if a name is unique, signal the player is ready or throw an error
+socket.on('nameUnique', function(unique) {
+	if(unique) {
+		playerName = document.getElementById("name").value;
+		socket.emit('playerReady', playerName, roomToJoin);
+	} else {
+		document.getElementById("nameInUseText").style.display = "block";
+		document.getElementById("nameLabel").style.display = "inline";
+		document.getElementById("name").style.display = "inline";
+	}
+});
+
+//reveal or hide the "Go" button for rooms with >= min number of players
+socket.on('revealGoButton', function() {
+	document.getElementById("goButton").style.display = "block";
+});
+socket.on('hideGoButton', function() {
+	document.getElementById("goButton").style.display = "none";
+});
+
+
+
+
+
+
+
+
+
+
+
+//if too many players disconnect from an in-progress game, give an error to refresh
+socket.on('callForRestart', function() {
+	document.getElementById("sorryGameInterruptText").style.display = "block";
+	document.getElementById("handHeader").style.display = "none";
+	document.getElementById("handCanvas").style.visibility = "hidden";
+});
+
+//when all players have designated they are ready, make the UI game-ready
+socket.on('allPlayersReady', function() {
+	document.getElementById("waitText").style.display = "none";
+	document.getElementById("goButton").style.display = "none";
+	document.getElementById("handHeader").style.display = "block";
+	document.getElementById("handCanvas").style.visibility = "visible";
+	document.getElementById("handHeader").innerHTML = playerName + "'s Hand";
+	canChooseCard = true;
+});
+
+//when a player is done with a game, reset their view to the first screen
 socket.on('returnToMenu', function() {
 	//clear the canvases
 	var ctx = tableCanvas.context;
@@ -129,13 +158,8 @@ socket.on('returnToMenu', function() {
 	document.getElementById("roomsTable").style.display = "block";
 });
 
-socket.on('revealGoButton', function() {
-	document.getElementById("goButton").style.display = "block";
-});
-socket.on('hideGoButton', function() {
-	document.getElementById("goButton").style.display = "none";
-});
-
+//when a winning card is chosen, clear the table and update the score
+//then, check to see if someone won with the new score
 socket.on('clearTable', function(idsAndScore) {
 	cardsOnTable = [];
 	updateTableUsers(idsAndScore);
