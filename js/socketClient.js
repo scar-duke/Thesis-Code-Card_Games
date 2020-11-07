@@ -162,7 +162,6 @@ socket.on('returnToMenu', function() {
 //then, check to see if someone won with the new score
 socket.on('clearTable', function(idsAndScore) {
 	cardsOnTable = [];
-	updateTableUsers(idsAndScore);
 	
 	checkForWinner(idsAndScore);
 	canChooseCard = true;

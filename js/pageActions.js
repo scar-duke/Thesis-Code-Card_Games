@@ -31,13 +31,13 @@ document.getElementById("tableCanvas").addEventListener("click", function(e) {
 	xyPair = getMousePos(document.getElementById("tableCanvas"), e);
 	c = getWinningCard.apply(null, xyPair);
 	if(c != undefined & isTurn) {
-		socket.emit('passTurn', roomToJoin);
 		socket.emit('winChoice', c, roomToJoin);
 		isTurn = false;
 		canChooseCard = true;
 		document.getElementById("handHeader").style.display = "block";
 		document.getElementById("handCanvas").style.visibility = "visible";
 		document.getElementById("judgeText").style.display = "none";
+		socket.emit('passTurn', roomToJoin);
 	}
 });
 	

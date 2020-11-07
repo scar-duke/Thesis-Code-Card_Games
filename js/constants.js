@@ -22,4 +22,4 @@ var profName = "Dr. Cessna";
 // of x rounds (one round = everyone has gone once)?
 var winByRounds = false;
 var numOfRounds = 1;
-var scoreToWin = 3;
+var scoreToWin = 1;

@@ -7,7 +7,7 @@ const fs = require('fs');
 
 // =================================================Set constant variables for server use
 const maxPlayers = 7;
-const minPlayers = 3;
+const minPlayers = 2;
 const maxNumOfRooms = 5;
 
 // these hold unaltered arrays of the csv read-in
