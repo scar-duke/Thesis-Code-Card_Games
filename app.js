@@ -128,17 +128,20 @@ io.on('connection', (socket) => {
 							for(var j = 0; j < users[i].length; j++) {
 								users[i][j].disconnect(true);
 							}
+							
 							//clean up the room for the next game
 							usersInRooms[i] = [];
 							users[i] = [];
 							idsAndScore[i] = [];
-							questionsCardContent[i] = constQCards;
+							questionsCardContent[i] = []
+							questionsCardContent[i] = constQCards.slice(0);
 							discardedQuestionCards[i] = [];
-							answersCardContent[i] = constACards;
+							answersCardContent[i] = constACards.slice(0);
 							discardedAnswerCards[i] = [];
 							currentTurn[i] = 1;
 							turn[i] = 0;
 							playersReady[i] = 0;
+
 						} else {
 							//hide click when everyone is ready button
 							io.sockets.in("room"+i).emit('hideGoButton');
@@ -256,9 +259,9 @@ io.on('connection', (socket) => {
 			usersInRooms[roomNum] = [];
 			users[roomNum] = [];
 			idsAndScore[roomNum] = [];
-			questionsCardContent[roomNum] = constQCards;
+			questionsCardContent[roomNum] = constQCards.slice(0);
 			discardedQuestionCards[roomNum] = [];
-			answersCardContent[roomNum] = constACards;
+			answersCardContent[roomNum] = constACards.slice(0);
 			discardedAnswerCards[roomNum] = [];
 			currentTurn[roomNum] = 1;
 			turn[roomNum] = 0;

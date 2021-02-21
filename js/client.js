@@ -69,14 +69,19 @@ class Card {
 		var ret = "";
 		var lineHeight = this.height - (cardFontSize + cardFontSize*.5);
 		if(ctx.measureText(txt).width > this.width) {
+			var fontDiff = 0;
 			var res = txt.split(" ");
 			for(var i = 0; i < res.length; i++) {
-				if(ctx.measureText(ret + " " + res[i]).width < this.width) {
+				while(ctx.measureText(res[i]).width > this.width) {
+					fontDiff++;
+					ctx.font = (cardFontSize-fontDiff) + "px " + fontType;
+				}
+				if(ctx.measureText(ret + res[i]).width < this.width) {
 					ret += res[i] + " ";
 				} else {
 					ret = ret.substring(0, ret.length-1); // gets rid of the space at the end
 					ctx.fillText(ret, this.x + this.width/2, this.y + this.height-lineHeight);
-					lineHeight -= cardFontSize;
+					lineHeight -= (cardFontSize-fontDiff);
 					i--;
 					ret = "";
 				}
@@ -87,6 +92,7 @@ class Card {
 			ret = "";
 		}
 		
+		ret = ret.substring(0, ret.length-1);
 		ctx.fillText(ret, this.x + this.width/2, this.y + this.height-lineHeight);
 	}
 }

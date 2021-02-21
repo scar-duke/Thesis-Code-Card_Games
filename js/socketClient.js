@@ -1,6 +1,6 @@
 var socket = io();
 var cardsOnTable = [];
-var roomToJoin;
+var roomToJoin = "";
 
 //gives the socket reference to its own server id
 socket.on('idSent', function(id) {
@@ -109,23 +109,7 @@ socket.on('hideGoButton', function() {
 	document.getElementById("goButton").style.display = "none";
 });
 
-
-
-
-
-
-
-
-
-
-
-//if too many players disconnect from an in-progress game, give an error to refresh
-socket.on('callForRestart', function() {
-	document.getElementById("sorryGameInterruptText").style.display = "block";
-	document.getElementById("handHeader").style.display = "none";
-	document.getElementById("handCanvas").style.visibility = "hidden";
-});
-
+//==================================================== Functions for game start
 //when all players have designated they are ready, make the UI game-ready
 socket.on('allPlayersReady', function() {
 	document.getElementById("waitText").style.display = "none";
@@ -134,6 +118,22 @@ socket.on('allPlayersReady', function() {
 	document.getElementById("handCanvas").style.visibility = "visible";
 	document.getElementById("handHeader").innerHTML = playerName + "'s Hand";
 	canChooseCard = true;
+});
+
+socket.on('updateTableUsers', function(idsAndScore) {
+	var room = parseInt(roomToJoin) + 1;
+	document.getElementById("roomTitle").style.display = "block";
+	document.getElementById("roomTitle").innerHTML = "Room " + room;
+	
+	updateTableUsers(idsAndScore);
+});
+
+//==================================================== Functions for game end
+//if too many players disconnect from an in-progress game, give an error to refresh
+socket.on('callForRestart', function() {
+	document.getElementById("sorryGameInterruptText").style.display = "block";
+	document.getElementById("handHeader").style.display = "none";
+	document.getElementById("handCanvas").style.visibility = "hidden";
 });
 
 //when a player is done with a game, reset their view to the first screen
@@ -158,15 +158,6 @@ socket.on('returnToMenu', function() {
 	document.getElementById("roomsTable").style.display = "block";
 });
 
-//when a winning card is chosen, clear the table and update the score
-//then, check to see if someone won with the new score
-socket.on('clearTable', function(idsAndScore) {
-	cardsOnTable = [];
-	
-	checkForWinner(idsAndScore);
-	canChooseCard = true;
-});
-
 // used to call forced-winner scenarios (i.e. if we run out of question cards)
 socket.on('chooseWinner', function(idsAndScore) {
 	var winner = idsAndScore[0][2]
@@ -181,6 +172,18 @@ socket.on('chooseWinner', function(idsAndScore) {
 	if(socketId == winner) {
 		socket.emit('playerHasWon', winner);
 	}
+});
+
+
+// Misc. / stuff that'll need changed between CAH and other rules
+
+//when a winning card is chosen, clear the table and update the score
+//then, check to see if someone won with the new score
+socket.on('clearTable', function(idsAndScore) {
+	cardsOnTable = [];
+	
+	checkForWinner(idsAndScore);
+	canChooseCard = true;
 });
 
 socket.on('endGame', function(idsAndScore, winner) {
@@ -200,14 +203,7 @@ socket.on('requestedCard', function(content) {
 socket.on('sentCardSuccess', function() {
 	socket.emit('requestedCard', roomToJoin);
 });
-socket.on('updateTableUsers', function(idsAndScore) {
-	if(playerName != undefined) {
-		var room = parseInt(roomToJoin) + 1;
-		document.getElementById("roomTitle").style.display = "block";
-		document.getElementById("roomTitle").innerHTML = "Room " + room;
-	}
-	updateTableUsers(idsAndScore);
-});
+
 socket.on('yourTurn', function() {
 	console.log("Your Turn");
 	isTurn = true;
@@ -245,7 +241,7 @@ function addNewCardToArray(content) {
 	drawOnCanvas(cardArray, handCanvas);
 }
 
-// Sends chosen card to server and removes it from the array
+// Sends chosen card to server and removes it from the hand array
 function sendCardToServer(socket, card, roomNum) {
 	socket.emit('sentCard', card, roomNum);
 	cardArray.splice(cardArray.indexOf(card), 1);
@@ -253,6 +249,7 @@ function sendCardToServer(socket, card, roomNum) {
 }
 
 function checkForWinner(idsAndScore) {
+	var isWinner = false;
 	if(winByRounds) { // if game is set to win after x rounds
 		if(round/idsAndScore.length == numOfRounds) {
 			// see who has the highest score (make applicable for ties later?)
@@ -264,6 +261,7 @@ function checkForWinner(idsAndScore) {
 					winningScore = idsAndScore[i][1];
 				}
 			}
+			isWinner = true;
 			// only call the winning code once from the server
 			if(socketId == winner) {
 				socket.emit('playerHasWon', winner, roomToJoin);
@@ -273,11 +271,18 @@ function checkForWinner(idsAndScore) {
 	} else { // else, game is set to check scores for a possible winner
 		for(var i = 0; i < idsAndScore.length; i++) {
 			if(idsAndScore[i][1] == scoreToWin) {
+				isWinner = true;
 				// only call the winning code once from the server
 				if(socketId == idsAndScore[i][2]) {
 					socket.emit('playerHasWon', idsAndScore[i][2], roomToJoin);
 				}
 			}
 		}
+	}
+	
+	// if there is no winner yet, trigger the next turn
+	if(!isWinner & isTurn) {
+		isTurn = false;
+		socket.emit('passTurn', roomToJoin);
 	}
 }
