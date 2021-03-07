@@ -276,6 +276,9 @@ io.on('connection', (socket) => {
 				//send the turn booleans to the next socket and keep track of the turn changing
 				users[roomNum][(turn[roomNum]+1)%users[roomNum].length].emit('yourTurn');
 				turn[roomNum] = currentTurn[roomNum]++ % users[roomNum].length;
+				if(turn[roomNum] == 0) {
+					io.sockets.in("room"+roomNum).emit('checkWinner', idsAndScore[roomNum]);
+				}
 				console.log("next turn triggered");
 				
 				var qCard = questionsCardContent[roomNum][Math.floor(Math.random() * questionsCardContent[roomNum].length)];

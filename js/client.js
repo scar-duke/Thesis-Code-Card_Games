@@ -233,7 +233,7 @@ function drawCardsToChooseWinnerFrom(cardArray, canvas) {
 function drawWinner(idsAndScore, winnerId) {
 	var ctx = tableCanvas.context;
 	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-	var winner;
+	var winners = [];
 	var score;
 	var x = ctx.canvas.width / 2;
 	var y = ctx.canvas.height / 2;
@@ -242,16 +242,23 @@ function drawWinner(idsAndScore, winnerId) {
 	ctx.fillStyle = fontColour;
 	ctx.font = tableFontSize + "px " + fontType;
 	ctx.textAlign = "center";
+	
+	//grab the name(s) of winner(s) and the score
 	for(var i = 0; i < idsAndScore.length; i++) {
-		if(idsAndScore[i][2] == winnerId) {
-			winner = idsAndScore[i][0];
+		if(winnerId.includes(idsAndScore[i][2])) {
+			winners.push(idsAndScore[i][0]);
 			score = idsAndScore[i][1];
-			break;
 		}
 	}
 	
+	//make the text state either the winner or tie-ers
 	//then format the winner text on the canvas where it can be read by everyone
-	var txt = "The winner is: " + winner + ", with a score of " + score + "!";
+	var txt = "";
+	if(winners.length > 1) {
+		txt = "It's a tie between " + winners.join(" and ") + " with a score of " + score + "!";
+	} else {
+		txt = "The winner is: " + winner + ", with a score of " + score + "!";
+	}
 	var ret = "";
 	if(ctx.measureText(txt).width > ctx.canvas.width) {
 		var res = txt.split(" ");

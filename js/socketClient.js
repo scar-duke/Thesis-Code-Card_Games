@@ -178,12 +178,18 @@ socket.on('chooseWinner', function(idsAndScore) {
 // Misc. / stuff that'll need changed between CAH and other rules
 
 //when a winning card is chosen, clear the table and update the score
-//then, check to see if someone won with the new score
 socket.on('clearTable', function(idsAndScore) {
 	cardsOnTable = [];
 	
-	checkForWinner(idsAndScore);
+	if(isTurn) {
+		socket.emit('passTurn', roomToJoin);
+		isTurn = false;
+	}
 	canChooseCard = true;
+});
+
+socket.on('checkWinner', function(idsAndScore) {
+	checkForWinner(idsAndScore);
 });
 
 socket.on('endGame', function(idsAndScore, winner) {
@@ -251,8 +257,7 @@ function sendCardToServer(socket, card, roomNum) {
 function checkForWinner(idsAndScore) {
 	var isWinner = false;
 	if(winByRounds) { // if game is set to win after x rounds
-		if(round/idsAndScore.length == numOfRounds) {
-			// see who has the highest score (make applicable for ties later?)
+		if(round == numOfRounds) {
 			var winner = idsAndScore[0][2];
 			var winningScore = idsAndScore[0][1]
 			for(var i = 1; i < idsAndScore.length; i++) {
@@ -269,20 +274,29 @@ function checkForWinner(idsAndScore) {
 		}
 		round++;
 	} else { // else, game is set to check scores for a possible winner
+		var winner = null;
+		var winningScore = null;
 		for(var i = 0; i < idsAndScore.length; i++) {
-			if(idsAndScore[i][1] == scoreToWin) {
-				isWinner = true;
-				// only call the winning code once from the server
-				if(socketId == idsAndScore[i][2]) {
-					socket.emit('playerHasWon', idsAndScore[i][2], roomToJoin);
+			if(idsAndScore[i][1] >= scoreToWin) {
+				if(winner == null | winningScore < idsAndScore[i][1]) {
+					winner = idsAndScore[i][2];
+					winningScore = idsAndScore[i][1];
+					tieArr = [];
+				} else if(winningScore == idsAndScore[i][1]) {
+					tieArr.push(idsAndScore[i][2]);
 				}
 			}
 		}
-	}
-	
-	// if there is no winner yet, trigger the next turn
-	if(!isWinner & isTurn) {
-		isTurn = false;
-		socket.emit('passTurn', roomToJoin);
+		if(winner != null) {
+			isWinner = true;
+			if(socketId == winner) {
+				if(tieArr != []) {
+					tieArr.push(winner);
+					socket.emit('playerHasWon', tieArr, roomToJoin);
+				} else {
+					socket.emit('playerHasWon', winner, roomToJoin);
+				}
+			}
+		}
 	}
 }
