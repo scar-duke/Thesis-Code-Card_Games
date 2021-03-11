@@ -256,20 +256,31 @@ function sendCardToServer(socket, card, roomNum) {
 
 function checkForWinner(idsAndScore) {
 	var isWinner = false;
+	var tieArr = [];
 	if(winByRounds) { // if game is set to win after x rounds
 		if(round == numOfRounds) {
-			var winner = idsAndScore[0][2];
-			var winningScore = idsAndScore[0][1]
-			for(var i = 1; i < idsAndScore.length; i++) {
-				if(idsAndScore[i][1] > winningScore) {
-					winner = idsAndScore[i][2];
-					winningScore = idsAndScore[i][1];
+			var winner = null;
+			var winningScore = 0;
+			for(var i = 0; i < idsAndScore.length; i++) {
+				if(idsAndScore[i][1] >= winningScore) {
+					if(winner == null | winningScore < idsAndScore[i][1]) {
+						winner = idsAndScore[i][2];
+						winningScore = idsAndScore[i][1];
+						tieArr = [];
+					} else if(winningScore == idsAndScore[i][1]) {
+						tieArr.push(idsAndScore[i][2]);
+					}
 				}
 			}
+			
 			isWinner = true;
-			// only call the winning code once from the server
 			if(socketId == winner) {
-				socket.emit('playerHasWon', winner, roomToJoin);
+				if(tieArr != []) {
+					tieArr.push(winner);
+					socket.emit('playerHasWon', tieArr, roomToJoin);
+				} else {
+					socket.emit('playerHasWon', winner, roomToJoin);
+				}
 			}
 		}
 		round++;
