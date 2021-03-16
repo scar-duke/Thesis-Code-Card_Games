@@ -4,7 +4,6 @@ var socketId = "";
 var isTurn = false;
 var canChooseCard = false;
 var round = 1;
-var currentQuestion;
 
 window.onload = function () {
 	handCanvas.start();
@@ -28,8 +27,10 @@ var tableCanvas = {
 }
 
 class Card {
-	constructor(content) {
+	constructor(content, relation = 0, order = 0) {
 	this.content = content;
+	this.relation = relation;
+	this.order = order;
 	this.colour = handCardColour;
 	this.width = cardWidth;
 	this.height = cardHeight;
@@ -99,14 +100,15 @@ class Card {
 
 function drawOnCanvas(cardArray, canvas) {
 	var ctx = canvas.context;
+	ctx.canvas.height = spaceBetweenCards*2 + cardHeight;
 	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 	var x = 20;
 	var y = 20;
 	var changeX = cardWidth + spaceBetweenCards;
 	var changeY = cardHeight + spaceBetweenCards;
-	for (i = 0; i < cardArray.length; i++) {
-		//console.log(cardArray[i]);
-		cardArray[i].drawCard(x, y, canvas);
+	
+	//first alter size of canvas if needed
+	for (var i = 0; i < cardArray.length; i++) {
 		x += changeX;
 		
 		//if card width added to x position would put it off the canvas, move down
@@ -117,6 +119,20 @@ function drawOnCanvas(cardArray, canvas) {
 		//if card height added to the y position would put it off the canvas, make it bigger
 		if(y + cardHeight > ctx.canvas.height) {
 			ctx.canvas.height += cardHeight + spaceBetweenCards;
+		}
+	}
+	
+	var x = 20;
+	var y = 20;
+	
+	for (var i = 0; i < cardArray.length; i++) {
+		cardArray[i].drawCard(x, y, canvas);
+		x += changeX;
+		
+		//if card width added to x position would put it off the canvas, move down
+		if(x + changeX > ctx.canvas.width) {
+			x = 20;
+			y += changeY;
 		}
 	}
 }
@@ -139,21 +155,12 @@ function getClickedCard(x, y) {
 	}
 }
 
-function getWinningCard(x, y) {
-	for(var i = 0; i < cardsOnTable.length; i++) {
-		if(x > cardsOnTable[i].x & x < cardsOnTable[i].x + cardsOnTable[i].width) {
-			if(y > cardsOnTable[i].y & y < cardsOnTable[i].y + cardsOnTable[i].height) {
-				return cardsOnTable[i];
-			}
-		}
-	}
-}
-
 function updateTableUsers(userIds) {
 	var ctx = tableCanvas.context;
 	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 	x = 20;
 	y = 40;
+	var changeUserY = tableFontSize*2 - 15;
 	for(var i = 0; i < userIds.length; i++) {
 		ctx.fillStyle = fontColour;
 		ctx.font = tableFontSize + "px " + fontType;
@@ -162,71 +169,7 @@ function updateTableUsers(userIds) {
 			ctx.font = "bold " + tableFontSize + "px " + fontType;
 		}
 		ctx.fillText(userIds[i][0] + " - ", x, y);
-		y += 40;
-	}
-}
-
-function updateTableWithCard(userIds, content) {
-	var ctx = tableCanvas.context;
-	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-	x = 20;
-	y = 40;
-	var playerTextWidth = 0;
-	
-	for(var i = 0; i < userIds.length; i++) {
-		//first draw the player names on the canvas
-		ctx.fillStyle = fontColour;
-		ctx.font = tableFontSize + "px " + fontType;
-		ctx.textAlign = "left";
-		if(userIds[i][2] == socketId) {
-			ctx.font = "bold " + tableFontSize + "px " + fontType;
-		}
-		currentTxt = userIds[i][0] +" - " + userIds[i][1];
-		ctx.fillText(currentTxt, x, y);
-		y += 40;
-		
-		//then figure out which is the longest to ensure proper card placement
-		if(ctx.measureText(currentTxt).width > playerTextWidth) {
-			playerTextWidth = ctx.measureText(currentTxt).width;
-		}
-	}
-	x = 40 + playerTextWidth + spaceBetweenCards;
-	currentQuestion = new Card(content);
-	currentQuestion.colour = questionCardColour;
-	if(x + currentQuestion.width > ctx.canvas.width) {
-		x = 40;
-		if(y + currentQuestion.height > ctx.canvas.height) {
-			ctx.canvas.height += currentQuestion.height + spaceBetweenCards;
-		}
-		currentQuestion.drawCard(x, y, tableCanvas);
-	} else {
-		y = 40;
-		currentQuestion.drawCard(x, y, tableCanvas);
-	}
-}
-
-function drawCardsToChooseWinnerFrom(cardArray, canvas) {
-	var ctx = canvas.context;
-	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-	var x = 20;
-	var y = 20;
-	changeX = cardWidth + spaceBetweenCards;
-	changeY = cardHeight + spaceBetweenCards;
-	currentQuestion.drawCard(x, y, tableCanvas);
-	x += changeX;
-	for (i = 0; i < cardArray.length; i++) {
-		cardArray[i].drawCard(x, y, canvas);
-		x += changeX;
-		
-		//if card width added to x position would put it off the canvas, move down
-		if(x + changeX > ctx.canvas.width) {
-			x = 20;
-			y += changeY;
-		}
-		//if card height added to the y position would put it off the canvas, make it bigger
-		if(y + cardHeight > ctx.canvas.height) {
-			ctx.canvas.height += cardHeight + spaceBetweenCards;
-		}
+		y += changeUserY;
 	}
 }
 
@@ -257,7 +200,7 @@ function drawWinner(idsAndScore, winnerId) {
 	if(winners.length > 1) {
 		txt = "It's a tie between " + winners.join(" and ") + " with a score of " + score + "!";
 	} else {
-		txt = "The winner is: " + winner + ", with a score of " + score + "!";
+		txt = "The winner is: " + winners + ", with a score of " + score + "!";
 	}
 	var ret = "";
 	if(ctx.measureText(txt).width > ctx.canvas.width) {

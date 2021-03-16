@@ -76,7 +76,7 @@ fs.createReadStream('cardFiles/answers.csv')
 
 // =================Get index file and other required external javascript/css function files
 app.get('/', (req, res) => {
-	res.sendFile(__dirname + '/index.html');
+	res.sendFile(__dirname + '/judgeIndex.html');
 });
 app.get('/js/client.js', (req, res) => {
 	res.sendFile(__dirname + '/js/client.js');
@@ -92,6 +92,9 @@ app.get('/js/constants.js', (req, res) => {
 });
 app.get('/css/style.css', (req, res) => {
 	res.sendFile(__dirname + '/css/style.css');
+});
+app.get('/js/commJudge.js', (req, res) => {
+	res.sendFile(__dirname + '/js/commJudge.js');
 });
 
 
@@ -152,19 +155,16 @@ io.on('connection', (socket) => {
 			console.log(socket.id + ' user disconnected');
 		});
 		
-		socket.on('checkName', (name, roomToJoin) => {
+		socket.on('playerReady', (name, roomToJoin) => {
+			console.log(name + " wants to join room " + roomToJoin);
 			var unique = true;
 			for(var i = 0; i < idsAndScore[roomToJoin].length; i++) {
 				if(name == idsAndScore[roomToJoin][i][0]) {
 					unique = false;
 				}
 			}
-			socket.emit('nameUnique', unique);
-		});
-		
-		socket.on('playerReady', (name, roomToJoin) => {
-			console.log(name + " wants to join room " + roomToJoin);
 			
+			if(unique) {
 			//check if game is in progress or not
 			if(gameInProgress[roomToJoin]) {
 				socket.emit('gameInProgress', true);
@@ -186,6 +186,9 @@ io.on('connection', (socket) => {
 			}
 			
 			io.sockets.emit('updateAvailableRooms', usersInRooms, roomToJoin, maxPlayers);
+			} else {
+				socket.emit('nameNotUnique');
+			}
 			
 		});
 		
@@ -211,19 +214,20 @@ io.on('connection', (socket) => {
 			socket.emit('sentCardSuccess');
 		});
 	
-		// When a client wants another card for their hand, send them the CONTENT
-		socket.on('requestedCard', (roomNum) => {
-			//console.log(socket.id + " wants a card");
-			var aCard = answersCardContent[roomNum][Math.floor(Math.random() * answersCardContent[roomNum].length)];
-			answersCardContent[roomNum].splice(answersCardContent[roomNum].indexOf(aCard), 1);
-			discardedAnswerCards[roomNum].push(aCard);
-			socket.emit('requestedCard', aCard);
-			
-			// if all answer cards have been used, reuse the discarded deck
-			if(answersCardContent[roomNum].length <= 0) {
-				answersCardContent[roomNum] = discardedAnswerCards[roomNum];
-				discardedAnswerCards[roomNum] = [];
-			}
+		// When a client wants cards for their hand, send them the content and relationNum
+		socket.on('requestedCard', (numOfCards, roomNum) => {
+				// if all cards have been used, end the game
+				if(answersCardContent[roomNum].length <= 0) {
+					io.sockets.in("room"+roomNum).emit('chooseWinner', idsAndScore[roomNum]);
+				}
+				var cards = [];
+				for(var i = 0; i < numOfCards; i++) {
+					var aCard = (answersCardContent[roomNum][Math.floor(Math.random() * answersCardContent[roomNum].length)]);
+					answersCardContent[roomNum].splice(answersCardContent[roomNum].indexOf(aCard), 1);
+					cards.push(aCard);
+					//console.log(socket.id + " wants a card");
+				}
+				socket.emit('requestedCard', cards);
 			//console.log("Gave them a Card");
 		});
 		

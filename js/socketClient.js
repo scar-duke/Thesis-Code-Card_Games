@@ -1,5 +1,4 @@
 var socket = io();
-var cardsOnTable = [];
 var roomToJoin = "";
 
 //gives the socket reference to its own server id
@@ -27,9 +26,7 @@ socket.on('gameInProgress', function(isInProgress) {
 		document.getElementById("readyButton").style.display = "none";
 		document.getElementById("chooseRoom").style.display = "none";
 		document.getElementById("roomsTable").style.display = "none";
-		for(i = 0; i < numOfCardsInHand; i++) {
-			socket.emit('requestedCard', roomToJoin);
-		}
+		socket.emit('requestedCard', numOfCardsInHand, roomToJoin);
 	}
 });
 
@@ -90,15 +87,10 @@ socket.on('updateAvailableRooms', function(usersInRooms, roomNum, maxPlayers) {
 });
 
 //after the check for if a name is unique, signal the player is ready or throw an error
-socket.on('nameUnique', function(unique) {
-	if(unique) {
-		playerName = document.getElementById("name").value;
-		socket.emit('playerReady', playerName, roomToJoin);
-	} else {
-		document.getElementById("nameInUseText").style.display = "block";
-		document.getElementById("nameLabel").style.display = "inline";
-		document.getElementById("name").style.display = "inline";
-	}
+socket.on('nameNotUnique', function() {
+	document.getElementById("nameInUseText").style.display = "block";
+	document.getElementById("nameLabel").style.display = "inline";
+	document.getElementById("name").style.display = "inline";
 });
 
 //reveal or hide the "Go" button for rooms with >= min number of players
@@ -109,53 +101,12 @@ socket.on('hideGoButton', function() {
 	document.getElementById("goButton").style.display = "none";
 });
 
-//==================================================== Functions for game start
-//when all players have designated they are ready, make the UI game-ready
-socket.on('allPlayersReady', function() {
-	document.getElementById("waitText").style.display = "none";
-	document.getElementById("goButton").style.display = "none";
-	document.getElementById("handHeader").style.display = "block";
-	document.getElementById("handCanvas").style.visibility = "visible";
-	document.getElementById("handHeader").innerHTML = playerName + "'s Hand";
-	canChooseCard = true;
-});
-
-socket.on('updateTableUsers', function(idsAndScore) {
-	var room = parseInt(roomToJoin) + 1;
-	document.getElementById("roomTitle").style.display = "block";
-	document.getElementById("roomTitle").innerHTML = "Room " + room;
-	
-	updateTableUsers(idsAndScore);
-});
-
 //==================================================== Functions for game end
 //if too many players disconnect from an in-progress game, give an error to refresh
 socket.on('callForRestart', function() {
 	document.getElementById("sorryGameInterruptText").style.display = "block";
 	document.getElementById("handHeader").style.display = "none";
 	document.getElementById("handCanvas").style.visibility = "hidden";
-});
-
-//when a player is done with a game, reset their view to the first screen
-socket.on('returnToMenu', function() {
-	//clear the canvases
-	var ctx = tableCanvas.context;
-	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-	ctx = handCanvas.context;
-	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-	
-	//clear local variables and hide stuff
-	cardArray = [];
-	isTurn = false
-	canChooseCard = false;
-	round = 1;
-	roomToJoin = "";
-	document.getElementById("roomTitle").style.display = "none";
-	document.getElementById("quitButton").style.display = "none";
-	
-	//show the rooms table
-	document.getElementById("chooseRoom").style.display = "block";
-	document.getElementById("roomsTable").style.display = "block";
 });
 
 // used to call forced-winner scenarios (i.e. if we run out of question cards)
@@ -175,84 +126,15 @@ socket.on('chooseWinner', function(idsAndScore) {
 });
 
 
-// Misc. / stuff that'll need changed between CAH and other rules
+// Misc.
 
-//when a winning card is chosen, clear the table and update the score
-socket.on('clearTable', function(idsAndScore) {
-	cardsOnTable = [];
-	
-	if(isTurn) {
-		socket.emit('passTurn', roomToJoin);
-		isTurn = false;
-	}
-	canChooseCard = true;
+socket.on('sentCardSuccess', function() {
+	socket.emit('requestedCard', 1, roomToJoin);
 });
 
 socket.on('checkWinner', function(idsAndScore) {
 	checkForWinner(idsAndScore);
 });
-
-socket.on('endGame', function(idsAndScore, winner) {
-	// disable everything else and display the winner, effectively ending the game
-	isTurn = false;
-	canChooseCard = false;
-	
-	document.getElementById("handHeader").style.display = "none";
-	document.getElementById("handCanvas").style.visibility = "hidden";
-	document.getElementById("quitButton").style.display = "block";
-	drawWinner(idsAndScore, winner);
-});
-
-socket.on('requestedCard', function(content) {
-	addNewCardToArray(content);
-});
-socket.on('sentCardSuccess', function() {
-	socket.emit('requestedCard', roomToJoin);
-});
-
-socket.on('yourTurn', function() {
-	console.log("Your Turn");
-	isTurn = true;
-	canChooseCard = false;
-	document.getElementById("handHeader").style.display = "none";
-	document.getElementById("handCanvas").style.visibility = "hidden";
-});
-
-
-socket.on('displayQuestionCard', function(idsAndScore, content) {
-	updateTableWithCard(idsAndScore, content);
-});
-
-socket.on('addCardToTable', function(content, id, usersSize) {
-	card = new Card(content);
-	card.owner = id;
-	cardsOnTable.push(card);
-	if(cardsOnTable.length == usersSize - 1) {
-		if(isTurn) {
-			document.getElementById("judgeText").style.display = "block";
-		}
-		drawCardsToChooseWinnerFrom(cardsOnTable, tableCanvas);
-	}
-});
-
-
-// Requests a new card from the server
-function getNewCard(socket) {
-	socket.emit('requestedCard', roomNum);
-}
-
-// Takes content recieved from the server and adds it to the card hand array
-function addNewCardToArray(content) {
-	cardArray.push(new Card(content));
-	drawOnCanvas(cardArray, handCanvas);
-}
-
-// Sends chosen card to server and removes it from the hand array
-function sendCardToServer(socket, card, roomNum) {
-	socket.emit('sentCard', card, roomNum);
-	cardArray.splice(cardArray.indexOf(card), 1);
-	drawOnCanvas(cardArray, handCanvas);
-}
 
 function checkForWinner(idsAndScore) {
 	var isWinner = false;
