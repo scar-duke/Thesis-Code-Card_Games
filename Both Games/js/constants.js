@@ -2,6 +2,7 @@
 var roomTableSelectColour = "blue";
 var handCardColour = "white";
 var questionCardColour = "black";
+var cardSelectColour = questionCardColour;
 var fontColour = "black";
 var questionFontColour = "white";
 var fontType = "Arial";
